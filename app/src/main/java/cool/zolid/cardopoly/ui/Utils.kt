@@ -17,6 +17,8 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -34,7 +36,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -216,7 +217,8 @@ val primaryButtonColors
 @Composable
 fun <T : Any> ExposedDropDownMenu(
     items: Collection<T>,
-    selectedItem: MutableState<T?>,
+    selectedItem: T?,
+    onSelectedItem: (item: T) -> Unit,
     nullReplacement: String?,
     label: String?,
     modifier: Modifier = Modifier
@@ -230,7 +232,7 @@ fun <T : Any> ExposedDropDownMenu(
         modifier = modifier
     ) {
         TextField(
-            value = selectedItem.value?.toString() ?: nullReplacement ?: "",
+            value = selectedItem?.toString() ?: nullReplacement ?: "",
             onValueChange = {},
             readOnly = true,
             trailingIcon = {
@@ -256,7 +258,7 @@ fun <T : Any> ExposedDropDownMenu(
                 DropdownMenuItem(
                     text = { Text(text = item.toString()) },
                     onClick = {
-                        selectedItem.value = item
+                        onSelectedItem(item)
                         expanded = false
                     }
                 )
@@ -273,4 +275,21 @@ fun ColumnScope.SectionDivider(text: String, padding: Boolean = true) {
             .padding(top = if (padding) 10.dp else 0.dp)
     )
     Divider()
+}
+
+@Composable
+fun ColumnScope.CategoryCard(text: String, content: @Composable () -> Unit) {
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = colorScheme.secondaryContainer,
+            contentColor = colorScheme.onSecondaryContainer
+        )
+    ) {
+        Text(
+            text = text, style = Typography.bodyLarge, modifier = Modifier
+                .align(Alignment.Start)
+//            .padding(top = if (padding) 10.dp else 0.dp)
+        )
+        content()
+    }
 }

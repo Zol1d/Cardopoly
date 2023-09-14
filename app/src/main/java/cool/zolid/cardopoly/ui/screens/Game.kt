@@ -69,7 +69,7 @@ fun GameScreen(navController: NavHostController) {
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(extraPadding(pv)), horizontalAlignment = Alignment.CenterHorizontally
+                .padding(extraPadding(pv, top = 10.dp)), horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(text = "Cardopoly", style = Typography.headlineMedium, color = colorScheme.primary)
             ScreenSelector(

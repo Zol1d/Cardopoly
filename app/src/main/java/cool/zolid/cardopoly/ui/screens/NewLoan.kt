@@ -2,7 +2,6 @@ package cool.zolid.cardopoly.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,18 +14,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -36,7 +35,6 @@ import cool.zolid.cardopoly.Loan
 import cool.zolid.cardopoly.LoanTerms
 import cool.zolid.cardopoly.MONEY
 import cool.zolid.cardopoly.Player
-import cool.zolid.cardopoly.R
 import cool.zolid.cardopoly.currentGame
 import cool.zolid.cardopoly.navigateWithoutTrace
 import cool.zolid.cardopoly.ui.ExposedDropDownMenu
@@ -50,16 +48,15 @@ import cool.zolid.cardopoly.ui.theme.Typography
 
 @Composable
 fun NewLoanScreen(navController: NavHostController) {
-    val from = remember { mutableStateOf<Player?>(null) }
-    val to = remember { mutableStateOf<Player?>(null) }
-    val amount = remember { mutableStateOf<Int?>(null) }
-    val amountToPayBack = remember { mutableStateOf<Int?>(null) }
-    val terms = remember { mutableStateOf<String?>(null) }
-    val customTerms = remember { mutableStateOf<String?>(null) }
-    val lapTerms = remember { mutableStateOf<Int?>(null) }
-    val notes = remember { mutableStateOf<String?>(null) }
-    Scaffold(
-        snackbarHost = { Snackbar.Host() },
+    var from by remember { mutableStateOf<Player?>(null) }
+    var to by remember { mutableStateOf<Player?>(null) }
+    var amount by remember { mutableStateOf<Int?>(null) }
+    var amountToPayBack by remember { mutableStateOf<Int?>(null) }
+    var terms by remember { mutableStateOf<String?>(null) }
+    var customTerms by remember { mutableStateOf<String?>(null) }
+    var lapTerms by remember { mutableStateOf<Int?>(null) }
+    var notes by remember { mutableStateOf<String?>(null) }
+    Scaffold(snackbarHost = { Snackbar.Host() },
         topBar = { StandardTopAppBar(title = "Jauns aizdevums", navController) }) { pv ->
         Column(
             Modifier
@@ -71,78 +68,56 @@ fun NewLoanScreen(navController: NavHostController) {
         ) {
             SectionDivider(text = "Spēlētāji", false)
             ExposedDropDownMenu(
-                items = currentGame!!.players.filter { it != to.value },
-                selectedItem = from,
-                label = "Devējs",
-                nullReplacement = "Izvēlieties devēju"
+                items = currentGame!!.players, selectedItem = from, onSelectedItem = {
+                    if (it == to) {
+                        to = from
+                    }
+                    from = it
+                }, label = "Devējs", nullReplacement = "Izvēlieties devēju"
             )
-            Box(
-                Modifier
-                    .fillMaxWidth()
-            ) {
-                Icon(
-                    Icons.Rounded.ArrowBack,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .rotate(270f)
-                        .size(36.dp)
-                        .align(Alignment.Center)
-                )
-                IconButton(
-                    onClick = {
-                        val tempPlayer = from.value
-                        from.value = to.value
-                        to.value = tempPlayer
-                    }, modifier = Modifier
-                        .size(36.dp)
-                        .align(Alignment.CenterEnd)
-                ) {
-                    Icon(
-                        painterResource(R.drawable.sync_alt),
-                        contentDescription = null,
-                        modifier = Modifier.rotate(90f),
-                        tint = colorScheme.tertiary
-                    )
-                }
-            }
+            Icon(
+                Icons.Rounded.ArrowBack,
+                contentDescription = null,
+                modifier = Modifier
+                    .rotate(270f)
+                    .size(36.dp)
+            )
             ExposedDropDownMenu(
-                items = currentGame!!.players.filter { it != from.value },
-                selectedItem = to,
-                label = "Saņēmējs",
-                nullReplacement = "Izvēlieties saņēmēju"
+                items = currentGame!!.players, selectedItem = to, onSelectedItem = {
+                    if (it == from) {
+                        from = to
+                    }
+                    to = it
+                }, label = "Saņēmējs", nullReplacement = "Izvēlieties saņēmēju"
             )
             SectionDivider(text = "Summas")
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                TextField(
-                    value = amount.value?.toString() ?: "",
+                TextField(value = amount?.toString() ?: "",
                     onValueChange = {
-                        amount.value = it.toIntOrNull().takeIf { it != null && it > 0 }
+                        amount = it.toIntOrNull().takeIf { it != null && it > 0 }
                     },
                     label = { Text("Aizdevums") },
                     keyboardOptions = KeyboardOptions(
-                        imeAction = ImeAction.Next,
-                        keyboardType = KeyboardType.Number
+                        imeAction = ImeAction.Next, keyboardType = KeyboardType.Number
                     ),
                     singleLine = true,
                     suffix = { Text(text = MONEY) },
                     modifier = Modifier.weight(1f)
                 )
-                TextField(
-                    value = amountToPayBack.value?.toString() ?: "",
+                TextField(value = amountToPayBack?.toString() ?: "",
                     onValueChange = {
-                        amountToPayBack.value = it.toIntOrNull().takeIf { it != null && it > 0 }
+                        amountToPayBack = it.toIntOrNull().takeIf { it != null && it > 0 }
                     },
                     label = { Text("Atmaksa") },
                     keyboardOptions = KeyboardOptions(
-                        imeAction = ImeAction.Done,
-                        keyboardType = KeyboardType.Number
+                        imeAction = ImeAction.Done, keyboardType = KeyboardType.Number
                     ),
                     singleLine = true,
                     suffix = { Text(text = MONEY) },
                     modifier = Modifier.weight(1f)
                 )
             }
-            AnimatedVisibility(amount.value != null && amountToPayBack.value != null && amountToPayBack.value!! < amount.value!!) {
+            AnimatedVisibility(amount != null && amountToPayBack != null && amountToPayBack!! < amount!!) {
                 Text(
                     text = "Kļūda: Aizdevuma summa nevar būt lielāka par atmaksas summu",
                     color = colorScheme.error,
@@ -153,29 +128,29 @@ fun NewLoanScreen(navController: NavHostController) {
             ExposedDropDownMenu(
                 items = remember { listOf("Apļi", "Pielāgots") },
                 selectedItem = terms,
+                onSelectedItem = { terms = it },
                 label = "Nosacījumu vieds",
                 nullReplacement = "Izvēlieties nosacījumu viedu"
             )
-            AnimatedVisibility(terms.value == "Pielāgots") {
+            AnimatedVisibility(terms == "Pielāgots") {
                 TextField(
-                    value = customTerms.value ?: "",
+                    value = customTerms ?: "",
                     onValueChange = {
-                        customTerms.value = it.trim().takeUnless { it.isBlank() }
+                        customTerms = it.trim().takeUnless { it.isBlank() }
                     },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                     label = { Text(text = "Nosacījumi") },
                     singleLine = false,
                 )
             }
-            AnimatedVisibility(terms.value == "Apļi") {
+            AnimatedVisibility(terms == "Apļi") {
                 TextField(
-                    value = lapTerms.value?.toString() ?: "",
+                    value = lapTerms?.toString() ?: "",
                     onValueChange = {
-                        lapTerms.value = it.toIntOrNull().takeIf { it != null && it > 0 }
+                        lapTerms = it.toIntOrNull().takeIf { it != null && it > 0 }
                     },
                     keyboardOptions = KeyboardOptions(
-                        imeAction = ImeAction.Done,
-                        keyboardType = KeyboardType.Number
+                        imeAction = ImeAction.Done, keyboardType = KeyboardType.Number
                     ),
                     label = { Text(text = "Apļu skaits") },
                     singleLine = true,
@@ -183,33 +158,28 @@ fun NewLoanScreen(navController: NavHostController) {
             }
             SectionDivider(text = "Piezīmes")
             TextField(
-                value = notes.value ?: "",
+                value = notes ?: "",
                 onValueChange = {
-                    notes.value = it.trim().takeUnless { it.isBlank() }
+                    notes = it.trim().takeUnless { it.isBlank() }
                 },
                 label = { Text("Piezīmes") },
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                 singleLine = false,
             )
-            Button(
-                enabled = listOf(
-                    from.value,
-                    to.value,
-                    amount.value,
-                    amountToPayBack.value,
-                    terms.value
-                ).all { it != null } && if (terms.value!! == "Apļi") lapTerms.value != null else customTerms.value != null && amount.value!! <= amountToPayBack.value!!,
+            Button(enabled = listOf(
+                from, to, amount, amountToPayBack, terms
+            ).all { it != null } && if (terms!! == "Apļi") lapTerms != null else customTerms != null && amount!! <= amountToPayBack!!,
                 onClick = {
                     currentGame!!.loans.add(
                         Loan(
-                            from = from.value!!,
-                            to = to.value!!,
-                            amount = amount.value!!,
-                            amountToPayBack = amountToPayBack.value!!,
-                            terms = if (terms.value == "Apļi") LoanTerms.Laps(lapTerms.value!!) else LoanTerms.Custom(
-                                customTerms.value!!
+                            from = from!!,
+                            to = to!!,
+                            amount = amount!!,
+                            amountToPayBack = amountToPayBack!!,
+                            terms = if (terms == "Apļi") LoanTerms.Laps(lapTerms!!) else LoanTerms.Custom(
+                                customTerms!!
                             ),
-                            notes = notes.value
+                            notes = notes
                         )
                     )
                     navController.navigateWithoutTrace("game")

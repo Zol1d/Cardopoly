@@ -89,7 +89,7 @@ fun CardsScreen(navController: NavHostController) {
     var removeDialogOpen by remember { mutableStateOf<String?>(null) }
 
     if (addDialogOpen) {
-        val cardColor = remember { mutableStateOf<String?>(null) }
+        var cardColor by remember { mutableStateOf<String?>(null) }
         var cardUid by remember { mutableStateOf<String?>(null) }
         DisposableEffect(true) {
             fun processNFC(b64id: String) {
@@ -111,9 +111,10 @@ fun CardsScreen(navController: NavHostController) {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     ExposedDropDownMenu(
-                        items = MonopolyColors.filter { it.value != cardColor.value && it.key !in localNFCCardColorBindings.values }.values,
+                        items = MonopolyColors.filter { it.value != cardColor && it.key !in localNFCCardColorBindings.values }.values,
                         selectedItem = cardColor,
                         label = "Krāsa",
+                        onSelectedItem = {cardColor = it},
                         nullReplacement = "Izvēlieties krāsu",
                         modifier = Modifier.padding(bottom = 10.dp)
                     )
@@ -139,7 +140,7 @@ fun CardsScreen(navController: NavHostController) {
                 TextButton(
                     onClick = {
                         localNFCCardColorBindings[cardUid!!] =
-                            MonopolyColors.filterValues { it == cardColor.value!! }.keys.first()
+                            MonopolyColors.filterValues { it == cardColor!! }.keys.first()
                         NFCCardColorBindings = localNFCCardColorBindings.toMap()
                         coroutineScope.launch {
                             ctx.nfcCardBindingDataStore.edit {
@@ -149,7 +150,7 @@ fun CardsScreen(navController: NavHostController) {
                         }
                         addDialogOpen = false
                     },
-                    enabled = cardColor.value != null && cardUid != null
+                    enabled = cardColor != null && cardUid != null
                 ) {
                     Text("Apstiprināt".uppercase())
                 }

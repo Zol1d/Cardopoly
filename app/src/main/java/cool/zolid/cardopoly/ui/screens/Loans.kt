@@ -191,7 +191,7 @@ fun LoansScreen(navController: NavHostController) {
                                     )
                                     Row {
                                         Text(
-                                            " └  ",
+                                            " └>  ",
                                             style = Typography.bodyMedium,
                                             color = colorScheme.secondary
                                         )
