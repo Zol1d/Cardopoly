@@ -16,6 +16,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,6 +30,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import cool.zolid.cardopoly.MONEY
+import cool.zolid.cardopoly.ui.ExposedDropDownMenu
 import cool.zolid.cardopoly.ui.SectionDivider
 import cool.zolid.cardopoly.ui.Snackbar
 import cool.zolid.cardopoly.ui.StandardTopAppBar
@@ -94,6 +96,7 @@ fun BankingCalcScreen(navController: NavHostController) {
             )
             var sourceValue by remember { mutableStateOf<Int?>(null) }
             var source2Value by remember { mutableStateOf<Int?>(null) }
+            var percentageOperation by remember { mutableStateOf("Bez darbības") }
             when (curentMode) {
                 CalcMode.DIFFERENCE -> {
                     Row(
@@ -101,7 +104,8 @@ fun BankingCalcScreen(navController: NavHostController) {
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(top = 10.dp)
                     ) {
-                        TextField(value = sourceValue?.toString() ?: "",
+                        TextField(
+                            value = sourceValue?.toString() ?: "",
                             onValueChange = {
                                 sourceValue = it.toIntOrNull()
                             },
@@ -114,7 +118,8 @@ fun BankingCalcScreen(navController: NavHostController) {
                             modifier = Modifier.weight(1f)
                         )
                         Text(text = " - ")
-                        TextField(value = source2Value?.toString() ?: "",
+                        TextField(
+                            value = source2Value?.toString() ?: "",
                             onValueChange = {
                                 source2Value = it.toIntOrNull()
                             },
@@ -142,7 +147,8 @@ fun BankingCalcScreen(navController: NavHostController) {
                         ), singleLine = true, modifier = Modifier.weight(1f)
                         )
                         Text(text = " % no ")
-                        TextField(value = source2Value?.toString() ?: "",
+                        TextField(
+                            value = source2Value?.toString() ?: "",
                             onValueChange = {
                                 source2Value = it.toIntOrNull()
                             },
@@ -155,6 +161,14 @@ fun BankingCalcScreen(navController: NavHostController) {
                             modifier = Modifier.weight(1f)
                         )
                     }
+                    ExposedDropDownMenu(
+                        items = remember { listOf("Bez darbības", "Pieskaitīt", "Atņemt") },
+                        selectedItem = percentageOperation,
+                        onSelectedItem = { percentageOperation = it },
+                        label = "Darbība",
+                        nullReplacement = null,
+                        modifier = Modifier.align(Alignment.Start).padding(top = 10.dp)
+                    )
                 }
 
                 CalcMode.PROPERTY_MORTGAGE -> TODO()
@@ -173,11 +187,40 @@ fun BankingCalcScreen(navController: NavHostController) {
 
                 CalcMode.PERCENTAGE -> {
                     if (sourceValue != null && source2Value != null && sourceValue!! > 0 && source2Value!! > 0) {
-                        Text(
-                            text = "${((sourceValue!!.toDouble() / 100) * source2Value!!.toDouble()).roundToInt()}$MONEY",
-                            style = Typography.headlineMedium,
-                            color = colorScheme.tertiary
-                        )
+                        val resultInt by
+                        remember { derivedStateOf { ((sourceValue!!.toDouble() / 100) * source2Value!!.toDouble()).roundToInt() } }
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = if (percentageOperation == "Bez darbības") Arrangement.End else Arrangement.SpaceBetween
+                        ) {
+                            if (percentageOperation != "Bez darbības") {
+                                Text(
+                                    text = "Daļa",
+                                    style = Typography.headlineMedium,
+                                )
+                            }
+                            Text(
+                                text = "$resultInt$MONEY",
+                                style = Typography.headlineMedium,
+                                color = colorScheme.tertiary
+                            )
+                        }
+                        if (percentageOperation != "Bez darbības") {
+                            Row(
+                                Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "Kopā",
+                                    style = Typography.headlineMedium,
+                                )
+                                Text(
+                                    text = "${if (percentageOperation == "Atņemt") source2Value!! - resultInt else source2Value!! + resultInt}$MONEY",
+                                    style = Typography.headlineMedium,
+                                    color = colorScheme.tertiary
+                                )
+                            }
+                        }
                     }
                 }
 
