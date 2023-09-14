@@ -41,8 +41,8 @@ fun HomeScreen(navController: NavHostController) {
                         "startgame?cards_enabled=true",
                         "Jauna spēle ar kartēm",
                         R.drawable.play_circle,
-                        false
-                    ),//NFCEnabled
+                        NFCEnabled
+                    ),
                     ScreenItem(
                         "startgame?cards_enabled=false",
                         "Jauna spēle bez kartēm",

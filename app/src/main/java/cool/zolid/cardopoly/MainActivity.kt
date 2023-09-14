@@ -87,12 +87,12 @@ val nfcNotAvialableDialogOpen: MutableState<Triple<String, String, Boolean>?> = 
 var NFCEnabled by mutableStateOf(false)
 val nfcApiSubscribers = mutableListOf<(b64id: String) -> Unit>()
 val MonopolyColors = mapOf(
-    Color.Red to "Sarkans",
-    Color.Blue to "Zils",
-    Color.Green to "Zaļš",
-    Color.Yellow to "Dzeltens",
-    Color.Cyan to "Gaiši zils",
-    Color.Magenta to "Violets"
+    Color.Red to "Sarkanā",
+    Color.Blue to "Zilā",
+    Color.Green to "Zaļā",
+    Color.Yellow to "Dzeltenā",
+    Color.Cyan to "Gaiši zilā",
+    Color.Magenta to "Violetā"
 )
 val Json = DefaultJson { allowStructuredMapKeys = true }
 var NFCCardColorBindings = mapOf<String, @Serializable(with = ColorSerializer::class) Color>()
@@ -107,7 +107,7 @@ object ColorSerializer : KSerializer<Color> {
 
 val Context.nfcCardBindingDataStore: DataStore<Preferences> by preferencesDataStore(name = "cards")
 
-data class Player(val name: String, val card: String?) {
+data class Player(val name: String, val card: String?, val money: Int) {
     override fun toString(): String = name
 }
 

@@ -114,7 +114,7 @@ fun CardsScreen(navController: NavHostController) {
                         items = MonopolyColors.filter { it.value != cardColor && it.key !in localNFCCardColorBindings.values }.values,
                         selectedItem = cardColor,
                         label = "Krāsa",
-                        onSelectedItem = {cardColor = it},
+                        onSelectedItem = { cardColor = it },
                         nullReplacement = "Izvēlieties krāsu",
                         modifier = Modifier.padding(bottom = 10.dp)
                     )
