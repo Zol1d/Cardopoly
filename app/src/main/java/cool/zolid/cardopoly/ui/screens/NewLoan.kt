@@ -3,7 +3,9 @@ package cool.zolid.cardopoly.ui.screens
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -13,12 +15,18 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalMinimumInteractiveComponentEnforcement
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,6 +54,7 @@ import cool.zolid.cardopoly.ui.extraPadding
 import cool.zolid.cardopoly.ui.primaryButtonColors
 import cool.zolid.cardopoly.ui.theme.Typography
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewLoanScreen(navController: NavHostController) {
     var from by remember { mutableStateOf<Player?>(null) }
@@ -91,32 +100,54 @@ fun NewLoanScreen(navController: NavHostController) {
                 }, label = "Saņēmējs", nullReplacement = "Izvēlieties saņēmēju"
             )
             SectionDivider(text = "Summas")
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                TextField(value = amount?.toString() ?: "",
-                    onValueChange = {
-                        amount = it.toIntOrNull().takeIf { it != null && it > 0 }
-                    },
-                    label = { Text("Aizdevums") },
-                    keyboardOptions = KeyboardOptions(
-                        imeAction = ImeAction.Next, keyboardType = KeyboardType.Number
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.weight(1f)) {
+                    TextField(value = amount?.toString() ?: "",
+                        onValueChange = {
+                            amount = it.toIntOrNull().takeIf { it != null && it > 0 }
+                        },
+                        label = { Text("Aizdevums") },
+                        keyboardOptions = KeyboardOptions(
+                            imeAction = ImeAction.Next, keyboardType = KeyboardType.Number
+                        ),
+                        singleLine = true,
+                        suffix = { Text(text = MONEY) },
+                        modifier = Modifier.weight(1f)
+                    )
+                    TextField(value = amountToPayBack?.toString() ?: "",
+                        onValueChange = {
+                            amountToPayBack = it.toIntOrNull().takeIf { it != null && it > 0 }
+                        },
+                        label = { Text("Atmaksa") },
+                        keyboardOptions = KeyboardOptions(
+                            imeAction = ImeAction.Done, keyboardType = KeyboardType.Number
+                        ),
+                        singleLine = true,
+                        suffix = { Text(text = MONEY) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                CompositionLocalProvider(
+                        LocalMinimumInteractiveComponentEnforcement provides false,
+                ) {
+                TextButton(
+                    onClick = { /*TODO*/ },
+                    shape = Shapes.listItem,
+                    colors = ButtonDefaults.textButtonColors(
+                        containerColor = colorScheme.secondary,
+                        contentColor = colorScheme.onSecondary
                     ),
-                    singleLine = true,
-                    suffix = { Text(text = MONEY) },
-                    modifier = Modifier.weight(1f)
-                )
-                TextField(value = amountToPayBack?.toString() ?: "",
-                    onValueChange = {
-                        amountToPayBack = it.toIntOrNull().takeIf { it != null && it > 0 }
-                    },
-                    label = { Text("Atmaksa") },
-                    keyboardOptions = KeyboardOptions(
-                        imeAction = ImeAction.Done, keyboardType = KeyboardType.Number
+                    contentPadding = PaddingValues(
+                        horizontal = 0.dp,
+                        vertical = 2.dp
                     ),
-                    singleLine = true,
-                    suffix = { Text(text = MONEY) },
-                    modifier = Modifier.weight(1f)
-                )
+                    modifier = Modifier.fillMaxHeight()
+                ) {
+                    Text(text = "%", style = Typography.bodyLarge)
+                }
             }
+            }
+
             AnimatedVisibility(amount != null && amountToPayBack != null && amountToPayBack!! < amount!!) {
                 Text(
                     text = "Kļūda: Aizdevuma summa nevar būt lielāka par atmaksas summu",

@@ -256,10 +256,9 @@ class MainActivity : ComponentActivity() {
                                         )
                                         val diffHours = diff / (60 * 60 * 1000)
                                         val diffMins = (diff % (60 * 60 * 1000)) / (60 * 1000)
-                                        val diffSecs = diff / 1000 % 60
                                         timePassed =
-                                            "${if (diffHours < 10) "0" else ""}${diffHours}:${if (diffMins < 10) "0" else ""}${diffMins}:${if (diffSecs < 10) "0" else ""}${diffSecs}"
-                                        delay(1000)
+                                            "${if (diffHours < 10) "0" else ""}${diffHours}:${if (diffMins < 10) "0" else ""}${diffMins}"
+                                        delay(60000)
                                     }
                                 }
                                 Surface(
