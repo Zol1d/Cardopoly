@@ -234,12 +234,12 @@ fun CardsScreen(navController: NavHostController) {
                             },
                             shape = Shapes.listItem,
                             contentPadding = PaddingValues(
-                                horizontal = 15.dp,
-                                vertical = 10.dp
+                                horizontal = 13.dp,
+                                vertical = 7.dp
                             ),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 0.dp, vertical = 5.dp)
+                                .padding(vertical = 3.dp)
                                 .animateItemPlacement()
                         ) {
                             Box(Modifier.fillMaxWidth()) {

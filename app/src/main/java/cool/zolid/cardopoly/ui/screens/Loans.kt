@@ -180,7 +180,7 @@ fun LoansScreen(navController: NavHostController) {
                             ),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 0.dp, vertical = 5.dp)
+                                .padding(vertical = 5.dp)
                                 .animateItemPlacement()
                         ) {
                             Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {

@@ -275,7 +275,7 @@ class MainActivity : ComponentActivity() {
                                 ) {
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                         Text(
-                                            text = "Aktīva spēle ${if (currentGame?.cardsSupport == true) "ar" else "bez"} kartēm | $timePassed",
+                                            text = "Cardopoly - spēle ${if (currentGame?.cardsSupport == true) "ar" else "bez"} kartēm | $timePassed",
                                             modifier = Modifier.padding(vertical = 5.dp),
                                             style = Typography.bodyMedium,
                                             fontSize = 16.sp,

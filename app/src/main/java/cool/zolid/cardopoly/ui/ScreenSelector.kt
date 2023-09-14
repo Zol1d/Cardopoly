@@ -3,6 +3,7 @@ package cool.zolid.cardopoly.ui
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -22,16 +23,17 @@ import androidx.navigation.NavController
 import cool.zolid.cardopoly.ui.theme.Typography
 
 data class ScreenItem(
-    val route: String,
+    val route: String?,
     val label: String,
     @DrawableRes val icon: Int,
-    val enabled: Boolean = true
+    val enabled: Boolean = true,
+    val onClick: () -> Unit = {},
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScreenSelector(
-    itemList: List<ScreenItem>,
+    rowList: List<List<ScreenItem>>,
     navController: NavController,
     modifier: Modifier = Modifier
 ) {
@@ -39,37 +41,44 @@ fun ScreenSelector(
         verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically),
         modifier = modifier
     ) {
-        for (screenItem in itemList) {
-            ElevatedCard(
-                onClick = {
-                    navController.navigate(screenItem.route)
-                }, modifier = Modifier
-                    .fillMaxWidth(),
-                enabled = screenItem.enabled,
-                colors = CardDefaults.elevatedCardColors(contentColor = MaterialTheme.colorScheme.onTertiaryContainer)
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .padding(10.dp)
-                        .fillMaxWidth()
-                ) {
-                    Icon(
-                        painterResource(screenItem.icon),
-                        contentDescription = null,
-                        modifier = Modifier.size(64.dp)
-                    )
-                    Column(
-                        modifier = Modifier
-                            .padding(top = 5.dp),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
+        for (row in rowList) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                for (screenItem in row) {
+                    ElevatedCard(
+                        onClick = {
+                            if (screenItem.route != null) {
+                                navController.navigate(screenItem.route)
+                            }
+                            screenItem.onClick()
+                        }, modifier = Modifier
+                            .fillMaxWidth().weight(1f),
+                        enabled = screenItem.enabled,
+                        colors = CardDefaults.elevatedCardColors(contentColor = MaterialTheme.colorScheme.onTertiaryContainer)
                     ) {
-                        Text(
-                            screenItem.label,
-                            textAlign = TextAlign.Center,
-                            style = Typography.bodyLarge
-                        )
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier
+                                .padding(10.dp)
+                                .fillMaxWidth()
+                        ) {
+                            Icon(
+                                painterResource(screenItem.icon),
+                                contentDescription = null,
+                                modifier = Modifier.size(64.dp)
+                            )
+                            Column(
+                                modifier = Modifier
+                                    .padding(top = 5.dp),
+                                verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    screenItem.label,
+                                    textAlign = TextAlign.Center,
+                                    style = Typography.bodyLarge
+                                )
+                            }
+                        }
                     }
                 }
             }
