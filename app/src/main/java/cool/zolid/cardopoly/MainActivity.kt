@@ -29,8 +29,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -107,7 +109,7 @@ object ColorSerializer : KSerializer<Color> {
 
 val Context.nfcCardBindingDataStore: DataStore<Preferences> by preferencesDataStore(name = "cards")
 
-data class Player(val name: String, val card: String?, val money: Int) {
+data class Player(val name: String, val card: String?, val money: MutableIntState) {
     override fun toString(): String = name
 }
 
@@ -145,9 +147,9 @@ var currentGame by mutableStateOf<Game?>(
     Game(
         false,
         listOf(
-            Player("Matīss", null, 1500),
-            Player("Norberts", null, 1500),
-            Player("Kārlis", null, 1500)
+            Player("Matīss", null, mutableIntStateOf(1500)),
+            Player("Norberts", null, mutableIntStateOf(1500)),
+            Player("Kārlis", null, mutableIntStateOf(1500))
         )
     )
 )

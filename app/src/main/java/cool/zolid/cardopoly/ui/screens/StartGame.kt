@@ -35,6 +35,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -131,7 +132,7 @@ fun StartGameScreen(navController: NavHostController, cards_enabled: Boolean) {
             confirmButton = {
                 TextButton(
                     onClick = {
-                        addingPlayers.add(Player(playerName, cardUid, 1500))
+                        addingPlayers.add(Player(playerName, cardUid, mutableIntStateOf(1500)))
                         addDialogOpen = false
                     },
                     enabled = playerName !in addingPlayers.map { it.name } && playerName.isNotBlank() && (!cards_enabled || cardUid != null)

@@ -7,11 +7,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.ripple.LocalRippleTheme
@@ -24,8 +27,10 @@ import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,6 +39,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import cool.zolid.cardopoly.MONEY
@@ -41,6 +49,7 @@ import cool.zolid.cardopoly.NFCCardColorBindings
 import cool.zolid.cardopoly.R
 import cool.zolid.cardopoly.currentGame
 import cool.zolid.cardopoly.navigateWithoutTrace
+import cool.zolid.cardopoly.nfcApiSubscribers
 import cool.zolid.cardopoly.ui.AlertDialog
 import cool.zolid.cardopoly.ui.NoRippleTheme
 import cool.zolid.cardopoly.ui.ScreenItem
@@ -50,10 +59,128 @@ import cool.zolid.cardopoly.ui.Snackbar
 import cool.zolid.cardopoly.ui.extraPadding
 import cool.zolid.cardopoly.ui.theme.Typography
 
+private enum class BankOperation {
+    ADD,
+    REMOVE,
+    TRANSFER
+}
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun GameScreen(navController: NavHostController) {
+    var currentBankOperationDialog by remember { mutableStateOf<BankOperation?>(null) }
     var exitDialogOpen by remember { mutableStateOf(false) }
+    if (currentBankOperationDialog != null) {
+        var sum by remember { mutableStateOf<Int?>(null) }
+        var sumLockedIn by remember { mutableStateOf(false) }
+        var cardTrasferFromUid by remember { mutableStateOf<String?>(null) }
+        DisposableEffect(true) {
+            fun processNFC(b64id: String) {
+                if (sumLockedIn && currentGame?.players?.any {it.card == b64id} == true) {
+                    when (currentBankOperationDialog) {
+                        BankOperation.ADD -> {
+                            currentGame!!.players.find { it.card == b64id }!!.money.intValue += sum!!
+                            Snackbar.showSnackbarMsg("Darījums veiksmīgs")
+                            currentBankOperationDialog = null
+                        }
+                        BankOperation.REMOVE -> {
+                            val money = currentGame!!.players.find { it.card == b64id }!!.money
+                            if (money.intValue < sum!!) {
+                                Snackbar.showSnackbarMsg("Darījums neveiksmīgs - nav pietiekamu līdzekļu", true)
+                            } else {
+                                money.intValue -= sum!!
+                                Snackbar.showSnackbarMsg("Darījums veiksmīgs")
+                            }
+                            currentBankOperationDialog = null
+                        }
+                        BankOperation.TRANSFER -> {
+                            if (cardTrasferFromUid == null){
+                                cardTrasferFromUid = b64id
+                            } else {
+                                val moneyFromAcc = currentGame!!.players.find { it.card == cardTrasferFromUid }!!.money
+                                if (moneyFromAcc.intValue < sum!!) {
+                                    Snackbar.showSnackbarMsg("Darījums neveiksmīgs - nav pietiekamu līdzekļu", true)
+                                } else {
+                                    moneyFromAcc.intValue -= sum!!
+                                    currentGame!!.players.find { it.card == b64id }!!.money.intValue += sum!!
+                                    Snackbar.showSnackbarMsg("Darījums veiksmīgs")
+                                }
+                                currentBankOperationDialog = null
+                            }
+                        }
+                        null -> {}
+                    }
+                }
+            }
+            nfcApiSubscribers.add(::processNFC)
+            onDispose {
+                nfcApiSubscribers.remove(::processNFC)
+            }
+        }
+        AlertDialog(
+            onDismissRequest = { currentBankOperationDialog = null },
+            title = { Text("${when(currentBankOperationDialog) {
+                BankOperation.ADD -> "Pieskaitīt"
+                BankOperation.REMOVE -> "Atņemt"
+                BankOperation.TRANSFER -> "Apmaiņa"
+                null -> ""
+            }            }${if (sumLockedIn) " - $sum$MONEY" else ""}") },
+            text = {
+                if (!sumLockedIn) {
+                    Row(Modifier.fillMaxWidth()) {
+                        TextField(
+                            value = sum?.toString() ?: "",
+                            onValueChange = {
+                                sum = it.toIntOrNull().takeIf { it != null && it > 0 }
+                            },
+                            label = { Text("Summa") },
+                            keyboardOptions = KeyboardOptions(
+                                imeAction = ImeAction.Done, keyboardType = KeyboardType.Number
+                            ),
+                            singleLine = true,
+                            suffix = { Text(text = MONEY) },
+                        )
+                        TextButton(
+                            onClick = { /*TODO*/ },
+                            shape = Shapes.listItem,
+                            colors = ButtonDefaults.textButtonColors(
+                                containerColor = colorScheme.secondary,
+                                contentColor = colorScheme.onSecondary
+                            ),
+                        ) {
+                            Text(text = "%", style = Typography.bodyLarge)
+                        }
+                    }
+                } else {
+                    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(
+                            painterResource(id = R.drawable.round_contactless),
+                            "NFC",
+                            modifier = Modifier
+                                .size(120.dp)
+                                .padding(bottom = 5.dp)
+                        )
+                        Text(text = "Pietuviniet${if (currentBankOperationDialog == BankOperation.TRANSFER) (if (cardTrasferFromUid == null) " devēja" else " saņēmēja") else ""} karti tālruņa aizmugurei")
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        sumLockedIn = true
+                    },
+                    enabled = sum != null && !sumLockedIn
+                ) {
+                    Text("Apstiprināt".uppercase())
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { currentBankOperationDialog = null }) {
+                    Text("Atcelt".uppercase())
+                }
+            }
+        )
+    }
     if (exitDialogOpen) {
         AlertDialog(
             onDismissRequest = { exitDialogOpen = false },
@@ -113,7 +240,7 @@ fun GameScreen(navController: NavHostController) {
                                 Box(Modifier.fillMaxWidth()) {
                                     if (currentGame?.cardsSupport == true) {
                                         Text(
-                                            text = "${player.money}$MONEY",
+                                            text = "${player.money.intValue}$MONEY",
                                             color = colorScheme.tertiary,
                                             style = Typography.bodyLarge,
                                             modifier = Modifier.align(Alignment.CenterEnd)
@@ -152,9 +279,9 @@ fun GameScreen(navController: NavHostController) {
                 ScreenSelector(
                     rowList = listOf(
                         if (currentGame?.cardsSupport == true)listOf(
-                            ScreenItem(null, "Piskaitīt", R.drawable.add, onClick = {}),
-                            ScreenItem(null, "Atņemt", R.drawable.remove, onClick = {}),
-                            ScreenItem(null, "Apmaiņa", R.drawable.sync_alt, onClick = {}),
+                            ScreenItem(null, "Pieskaitīt", R.drawable.add, onClick = {currentBankOperationDialog = BankOperation.ADD}),
+                            ScreenItem(null, "Atņemt", R.drawable.remove, onClick = {currentBankOperationDialog = BankOperation.REMOVE}),
+                            ScreenItem(null, "Apmaiņa", R.drawable.sync_alt, onClick = {currentBankOperationDialog = BankOperation.TRANSFER}),
                         ) else listOf(),
                         listOf(
                             ScreenItem("loans", "Aizdevumi", R.drawable.request_quote),
