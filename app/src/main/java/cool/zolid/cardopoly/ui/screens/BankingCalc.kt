@@ -53,6 +53,145 @@ fun BankingCalcScreen(navController: NavHostController) {
                 .fillMaxSize()
                 .padding(extraPadding(pv)), horizontalAlignment = Alignment.End
         ) {
+            var sourceValue by remember { mutableStateOf<Int?>(null) }
+            var source2Value by remember { mutableStateOf<Int?>(null) }
+            var percentageOperation by remember { mutableStateOf("Bez darbības") }
+            SectionDivider(text = "Rezultāts", false)
+            when (curentMode) {
+                CalcMode.DIFFERENCE -> {
+                    Text(
+                        text = "${if (sourceValue != null && source2Value != null) sourceValue!! - source2Value!! else "--"}$MONEY",
+                        style = Typography.headlineMedium,
+                        color = colorScheme.tertiary
+                    )
+                }
+
+                CalcMode.PERCENTAGE -> {
+                    val resultInt by remember {
+                        derivedStateOf {
+                            (((sourceValue?.toDouble() ?: 0.00) / 100) * (source2Value?.toDouble()
+                                ?: 0.00)).roundToInt()
+                        }
+                    }
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = if (percentageOperation == "Bez darbības") Arrangement.End else Arrangement.SpaceBetween
+                    ) {
+                        if (percentageOperation != "Bez darbības") {
+                            Text(
+                                text = "Daļa",
+                                style = Typography.headlineMedium,
+                            )
+                        }
+                        Text(
+                            text = "${if (sourceValue != null && source2Value != null) resultInt else "--"}$MONEY",
+                            style = Typography.headlineMedium,
+                            color = colorScheme.tertiary
+                        )
+                    }
+                    if (percentageOperation != "Bez darbības") {
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "Kopā",
+                                style = Typography.headlineMedium,
+                            )
+                            Text(
+                                text = "${if (sourceValue != null && source2Value != null) (if (percentageOperation == "Atņemt") source2Value!! - resultInt else source2Value!! + resultInt) else "--"}$MONEY",
+                                style = Typography.headlineMedium,
+                                color = colorScheme.tertiary
+                            )
+                        }
+                    }
+
+                }
+
+                CalcMode.PROPERTY_MORTGAGE -> TODO()
+            }
+            SectionDivider(
+                text = when (curentMode) {
+                    CalcMode.DIFFERENCE -> "Starpība"
+                    CalcMode.PERCENTAGE -> "Procenti"
+                    CalcMode.PROPERTY_MORTGAGE -> "Īpašumu ķīla"
+                }
+            )
+            when (curentMode) {
+                CalcMode.DIFFERENCE -> {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(top = 10.dp)
+                    ) {
+                        TextField(value = sourceValue?.toString() ?: "",
+                            onValueChange = {
+                                sourceValue = it.toIntOrNull()
+                            },
+                            label = { Text("Ievade") },
+                            keyboardOptions = KeyboardOptions(
+                                imeAction = ImeAction.Next, keyboardType = KeyboardType.Number
+                            ),
+                            singleLine = true,
+                            suffix = { Text(text = MONEY) },
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(text = " - ")
+                        TextField(value = source2Value?.toString() ?: "",
+                            onValueChange = {
+                                source2Value = it.toIntOrNull()
+                            },
+                            label = { Text("Ievade 2") },
+                            keyboardOptions = KeyboardOptions(
+                                imeAction = ImeAction.Done, keyboardType = KeyboardType.Number
+                            ),
+                            singleLine = true,
+                            suffix = { Text(text = MONEY) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+
+                CalcMode.PERCENTAGE -> {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(top = 10.dp)
+                    ) {
+                        TextField(value = sourceValue?.toString() ?: "", onValueChange = {
+                            sourceValue = it.toIntOrNull()
+                        }, label = { Text("Ievade") }, keyboardOptions = KeyboardOptions(
+                            imeAction = ImeAction.Next, keyboardType = KeyboardType.Number
+                        ), singleLine = true, modifier = Modifier.weight(1f)
+                        )
+                        Text(text = " % no ")
+                        TextField(value = source2Value?.toString() ?: "",
+                            onValueChange = {
+                                source2Value = it.toIntOrNull()
+                            },
+                            label = { Text("Ievade 2") },
+                            keyboardOptions = KeyboardOptions(
+                                imeAction = ImeAction.Done, keyboardType = KeyboardType.Number
+                            ),
+                            singleLine = true,
+                            suffix = { Text(text = MONEY) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    ExposedDropDownMenu(
+                        items = remember { listOf("Bez darbības", "Pieskaitīt", "Atņemt") },
+                        selectedItem = percentageOperation,
+                        onSelectedItem = { percentageOperation = it },
+                        label = "Darbība",
+                        nullReplacement = null,
+                        modifier = Modifier
+                            .align(Alignment.Start)
+                            .padding(top = 10.dp)
+                    )
+                }
+
+                CalcMode.PROPERTY_MORTGAGE -> TODO()
+            }
             @Composable
             fun RadioButtonModeChoice(mode: CalcMode, text: String, enabled: Boolean = true) {
                 Row(
@@ -83,149 +222,10 @@ fun BankingCalcScreen(navController: NavHostController) {
                 }
                 Divider()
             }
-            SectionDivider(text = "Režīms", false)
+            SectionDivider(text = "Režīms")
             RadioButtonModeChoice(mode = CalcMode.DIFFERENCE, text = "Starpība")
             RadioButtonModeChoice(mode = CalcMode.PERCENTAGE, text = "Procenti")
             RadioButtonModeChoice(mode = CalcMode.PROPERTY_MORTGAGE, text = "Īpašumu ķīla", false)
-            SectionDivider(
-                text = when (curentMode) {
-                    CalcMode.DIFFERENCE -> "Starpība"
-                    CalcMode.PERCENTAGE -> "Procenti"
-                    CalcMode.PROPERTY_MORTGAGE -> "Īpašumu ķīla"
-                }
-            )
-            var sourceValue by remember { mutableStateOf<Int?>(null) }
-            var source2Value by remember { mutableStateOf<Int?>(null) }
-            var percentageOperation by remember { mutableStateOf("Bez darbības") }
-            when (curentMode) {
-                CalcMode.DIFFERENCE -> {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(top = 10.dp)
-                    ) {
-                        TextField(
-                            value = sourceValue?.toString() ?: "",
-                            onValueChange = {
-                                sourceValue = it.toIntOrNull()
-                            },
-                            label = { Text("Ievade") },
-                            keyboardOptions = KeyboardOptions(
-                                imeAction = ImeAction.Next, keyboardType = KeyboardType.Number
-                            ),
-                            singleLine = true,
-                            suffix = { Text(text = MONEY) },
-                            modifier = Modifier.weight(1f)
-                        )
-                        Text(text = " - ")
-                        TextField(
-                            value = source2Value?.toString() ?: "",
-                            onValueChange = {
-                                source2Value = it.toIntOrNull()
-                            },
-                            label = { Text("Ievade 2") },
-                            keyboardOptions = KeyboardOptions(
-                                imeAction = ImeAction.Done, keyboardType = KeyboardType.Number
-                            ),
-                            singleLine = true,
-                            suffix = { Text(text = MONEY) },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-
-                CalcMode.PERCENTAGE -> {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(top = 10.dp)
-                    ) {
-                        TextField(value = sourceValue?.toString() ?: "", onValueChange = {
-                            sourceValue = it.toIntOrNull()
-                        }, label = { Text("Ievade") }, keyboardOptions = KeyboardOptions(
-                            imeAction = ImeAction.Next, keyboardType = KeyboardType.Number
-                        ), singleLine = true, modifier = Modifier.weight(1f)
-                        )
-                        Text(text = " % no ")
-                        TextField(
-                            value = source2Value?.toString() ?: "",
-                            onValueChange = {
-                                source2Value = it.toIntOrNull()
-                            },
-                            label = { Text("Ievade 2") },
-                            keyboardOptions = KeyboardOptions(
-                                imeAction = ImeAction.Done, keyboardType = KeyboardType.Number
-                            ),
-                            singleLine = true,
-                            suffix = { Text(text = MONEY) },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    ExposedDropDownMenu(
-                        items = remember { listOf("Bez darbības", "Pieskaitīt", "Atņemt") },
-                        selectedItem = percentageOperation,
-                        onSelectedItem = { percentageOperation = it },
-                        label = "Darbība",
-                        nullReplacement = null,
-                        modifier = Modifier.align(Alignment.Start).padding(top = 10.dp)
-                    )
-                }
-
-                CalcMode.PROPERTY_MORTGAGE -> TODO()
-            }
-            SectionDivider(text = "Rezultāts")
-            when (curentMode) {
-                CalcMode.DIFFERENCE -> {
-                    if (sourceValue != null && source2Value != null) {
-                        Text(
-                            text = "${sourceValue!! - source2Value!!}$MONEY",
-                            style = Typography.headlineMedium,
-                            color = colorScheme.tertiary
-                        )
-                    }
-                }
-
-                CalcMode.PERCENTAGE -> {
-                    if (sourceValue != null && source2Value != null && sourceValue!! > 0 && source2Value!! > 0) {
-                        val resultInt by
-                        remember { derivedStateOf { ((sourceValue!!.toDouble() / 100) * source2Value!!.toDouble()).roundToInt() } }
-                        Row(
-                            Modifier.fillMaxWidth(),
-                            horizontalArrangement = if (percentageOperation == "Bez darbības") Arrangement.End else Arrangement.SpaceBetween
-                        ) {
-                            if (percentageOperation != "Bez darbības") {
-                                Text(
-                                    text = "Daļa",
-                                    style = Typography.headlineMedium,
-                                )
-                            }
-                            Text(
-                                text = "$resultInt$MONEY",
-                                style = Typography.headlineMedium,
-                                color = colorScheme.tertiary
-                            )
-                        }
-                        if (percentageOperation != "Bez darbības") {
-                            Row(
-                                Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(
-                                    text = "Kopā",
-                                    style = Typography.headlineMedium,
-                                )
-                                Text(
-                                    text = "${if (percentageOperation == "Atņemt") source2Value!! - resultInt else source2Value!! + resultInt}$MONEY",
-                                    style = Typography.headlineMedium,
-                                    color = colorScheme.tertiary
-                                )
-                            }
-                        }
-                    }
-                }
-
-                CalcMode.PROPERTY_MORTGAGE -> TODO()
-            }
         }
     }
 }

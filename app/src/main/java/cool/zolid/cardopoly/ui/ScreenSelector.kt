@@ -11,15 +11,15 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import cool.zolid.cardopoly.NFCCardColorBindings
 import cool.zolid.cardopoly.ui.theme.Typography
 
 data class ScreenItem(
@@ -33,9 +33,7 @@ data class ScreenItem(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScreenSelector(
-    rowList: List<List<ScreenItem>>,
-    navController: NavController,
-    modifier: Modifier = Modifier
+    rowList: List<List<ScreenItem>>, navController: NavController, modifier: Modifier = Modifier
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically),
@@ -50,10 +48,12 @@ fun ScreenSelector(
                                 navController.navigate(screenItem.route)
                             }
                             screenItem.onClick()
-                        }, modifier = Modifier
-                            .fillMaxWidth().weight(1f),
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
                         enabled = screenItem.enabled,
-                        colors = CardDefaults.elevatedCardColors(contentColor = MaterialTheme.colorScheme.onTertiaryContainer)
+                        colors = CardDefaults.elevatedCardColors(contentColor = colorScheme.onTertiaryContainer)
                     ) {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
@@ -67,16 +67,20 @@ fun ScreenSelector(
                                 modifier = Modifier.size(64.dp)
                             )
                             Column(
-                                modifier = Modifier
-                                    .padding(top = 5.dp),
+                                modifier = Modifier.padding(top = 5.dp),
                                 verticalArrangement = Arrangement.Center,
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
-                                    screenItem.label,
-                                    textAlign = TextAlign.Center,
-                                    style = Typography.bodyLarge
+                                    screenItem.label, style = Typography.bodyLarge
                                 )
+                                if (screenItem.route == "startgame?cards_enabled=true" && NFCCardColorBindings.size < 2) {
+                                    Text(
+                                        "Vajag vismaz 2 reģistrētas kartes, lai spēlētu",
+                                        style = Typography.bodyMedium,
+                                        color = colorScheme.error
+                                    )
+                                }
                             }
                         }
                     }

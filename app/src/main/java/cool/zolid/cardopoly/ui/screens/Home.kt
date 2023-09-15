@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import cool.zolid.cardopoly.BuildConfig
+import cool.zolid.cardopoly.NFCCardColorBindings
 import cool.zolid.cardopoly.NFCEnabled
 import cool.zolid.cardopoly.R
 import cool.zolid.cardopoly.ui.ScreenItem
@@ -41,7 +42,7 @@ fun HomeScreen(navController: NavHostController) {
                         "startgame?cards_enabled=true",
                         "Jauna spēle ar kartēm",
                         R.drawable.play_circle,
-                        NFCEnabled
+                        NFCEnabled && NFCCardColorBindings.size > 1
                     )),
                     listOf(ScreenItem(
                         "startgame?cards_enabled=false",

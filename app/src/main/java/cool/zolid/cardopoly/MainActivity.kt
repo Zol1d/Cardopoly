@@ -141,7 +141,16 @@ data class Game(
     }
 }
 
-var currentGame by mutableStateOf<Game?>(null)
+var currentGame by mutableStateOf<Game?>(
+    Game(
+        false,
+        listOf(
+            Player("Matīss", null, 1500),
+            Player("Norberts", null, 1500),
+            Player("Kārlis", null, 1500)
+        )
+    )
+)
 
 fun NavController.navigateWithoutTrace(route: String) = navigate(route) {
     popUpTo(0) {
@@ -186,11 +195,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         CoroutineScope(Dispatchers.IO).launch {
-            NFCCardColorBindings =
-                Json.decodeFromString(
-                    nfcCardBindingDataStore.data.first()[stringPreferencesKey("cards")]
-                        ?: return@launch
-                )
+            NFCCardColorBindings = Json.decodeFromString(
+                nfcCardBindingDataStore.data.first()[stringPreferencesKey("cards")] ?: return@launch
+            )
         }
         setContent {
             AppTheme {
@@ -200,8 +207,7 @@ class MainActivity : ComponentActivity() {
                         onDismissRequest = { nfcNotAvialableDialogOpen.value = null },
                         title = {
                             Text(
-                                nfcNotAvialableDialogOpen.value?.first ?: "",
-                                fontSize = 20.sp
+                                nfcNotAvialableDialogOpen.value?.first ?: "", fontSize = 20.sp
                             )
                         },
                         text = { Text(nfcNotAvialableDialogOpen.value?.second ?: "") },
@@ -243,8 +249,7 @@ class MainActivity : ComponentActivity() {
                             )
                             window.statusBarColor = surfaceColor.toArgb()
                             WindowCompat.getInsetsController(
-                                window,
-                                LocalView.current
+                                window, LocalView.current
                             ).isAppearanceLightStatusBars = surfaceColor.luminance() > 0.25
                             AnimatedVisibility(visible = currentGame != null) {
                                 var timePassed by remember { mutableStateOf("00:00") }
@@ -285,13 +290,11 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         }
-                        NavHost(
-                            navController = navController,
+                        NavHost(navController = navController,
                             startDestination = if (currentGame != null) "game" else "home",
                             modifier = Modifier.fillMaxSize(),
                             enterTransition = { EnterTransition.None },
-                            exitTransition = { ExitTransition.None }
-                        ) {
+                            exitTransition = { ExitTransition.None }) {
                             composable("home") { HomeScreen(navController) }
                             composable(
                                 "startgame?cards_enabled={cards_enabled}",
@@ -300,8 +303,7 @@ class MainActivity : ComponentActivity() {
                                 })
                             ) {
                                 StartGameScreen(
-                                    navController,
-                                    it.arguments!!.getBoolean("cards_enabled")
+                                    navController, it.arguments!!.getBoolean("cards_enabled")
                                 )
                             }
                             composable("game") { GameScreen(navController) }

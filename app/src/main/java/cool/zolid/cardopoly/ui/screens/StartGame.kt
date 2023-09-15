@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -98,7 +99,9 @@ fun StartGameScreen(navController: NavHostController, cards_enabled: Boolean) {
                         label = { Text("Spēlētāja vārds") },
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                         singleLine = true,
-                        modifier = Modifier.fillMaxWidth().padding(bottom = if (cards_enabled) 10.dp else 0.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = if (cards_enabled) 10.dp else 0.dp)
                     )
                     AnimatedVisibility(playerName in addingPlayers.map { it.name }) {
                         Text(
@@ -152,9 +155,9 @@ fun StartGameScreen(navController: NavHostController, cards_enabled: Boolean) {
                     onClick = {
                         addingPlayers.remove(removeDialogOpen)
                         removeDialogOpen = null
-                    }
+                    }, colors = ButtonDefaults.textButtonColors(containerColor = colorScheme.errorContainer)
                 ) {
-                    Text("Apstiprināt".uppercase(), color = colorScheme.error)
+                    Text("Apstiprināt".uppercase())
                 }
             },
             dismissButton = {

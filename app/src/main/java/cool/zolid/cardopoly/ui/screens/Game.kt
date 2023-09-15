@@ -66,8 +66,7 @@ fun GameScreen(navController: NavHostController) {
                         navController.navigateWithoutTrace("home")
                     },
                     colors = ButtonDefaults.textButtonColors(
-                        containerColor = colorScheme.errorContainer,
-                        contentColor = colorScheme.onErrorContainer
+                        containerColor = colorScheme.errorContainer
                     )
                 ) {
                     Text("Apstiprināt".uppercase())

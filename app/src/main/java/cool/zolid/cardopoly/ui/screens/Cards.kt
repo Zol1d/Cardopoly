@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -178,9 +179,10 @@ fun CardsScreen(navController: NavHostController) {
                             }
                         }
                         removeDialogOpen = null
-                    }
+                    },
+                    colors = ButtonDefaults.textButtonColors(containerColor = colorScheme.errorContainer)
                 ) {
-                    Text("Apstiprināt".uppercase(), color = colorScheme.error)
+                    Text("Apstiprināt".uppercase())
                 }
             },
             dismissButton = {
