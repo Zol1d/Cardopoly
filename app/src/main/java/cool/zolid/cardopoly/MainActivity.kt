@@ -2,13 +2,14 @@ package cool.zolid.cardopoly
 
 import android.content.Context
 import android.content.Intent
+import android.media.AudioManager
+import android.media.ToneGenerator
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.animateColorAsState
@@ -36,8 +37,10 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -49,6 +52,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.navigation.NavController
@@ -72,11 +76,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlin.io.encoding.Base64
@@ -99,7 +105,7 @@ val MonopolyColors = mapOf(
 val Json = DefaultJson { allowStructuredMapKeys = true }
 var NFCCardColorBindings = mapOf<String, @Serializable(with = ColorSerializer::class) Color>()
 
-object ColorSerializer : KSerializer<Color> {
+class ColorSerializer : KSerializer<Color> {
     override val descriptor: SerialDescriptor =
         PrimitiveSerialDescriptor("Color", PrimitiveKind.INT)
 
@@ -108,13 +114,28 @@ object ColorSerializer : KSerializer<Color> {
 }
 
 val Context.nfcCardBindingDataStore: DataStore<Preferences> by preferencesDataStore(name = "cards")
+val Context.gameRecoveryDataStore: DataStore<Preferences> by preferencesDataStore(name = "gamerecovery")
 
 data class Player(val name: String, val card: String?, val money: MutableIntState) {
     override fun toString(): String = name
 }
 
+@Serializable
+data class HistoricPlayer(val name: String, val card: String?) {
+    override fun toString(): String = name
+}
+
+@Serializable
+data class StaticPlayer(val name: String, val card: String?, val money: Int) {
+    constructor(player: Player) : this(player.name, player.card, player.money.intValue)
+}
+
+@Serializable
 sealed class LoanTerms {
+    @Serializable
     data class Laps(val laps: Int) : LoanTerms()
+
+    @Serializable
     data class Custom(val terms: String) : LoanTerms()
 }
 
@@ -132,9 +153,29 @@ data class Loan(
     }
 }
 
+@Serializable
+data class StaticLoan(
+    val from: StaticPlayer,
+    val to: StaticPlayer,
+    val amount: Int,
+    val amountToPayBack: Int,
+    val terms: LoanTerms,
+    val notes: String?
+) {
+    constructor(loan: Loan) : this(
+        StaticPlayer(loan.from),
+        StaticPlayer(loan.to),
+        loan.amount,
+        loan.amountToPayBack,
+        loan.terms,
+        loan.notes
+    )
+}
+
 data class Game(
     val cardsSupport: Boolean,
-    val players: List<Player>,
+    val players: SnapshotStateList<Player>,
+    val historicPlayers: SnapshotStateList<HistoricPlayer> = mutableStateListOf(),
     val startMillis: Long = System.currentTimeMillis(),
     val loans: SnapshotStateList<Loan> = mutableStateListOf()
 ) {
@@ -143,27 +184,95 @@ data class Game(
     }
 }
 
-var currentGame by mutableStateOf<Game?>(
-    Game(
-        false,
-        listOf(
-            Player("Matīss", null, mutableIntStateOf(1500)),
-            Player("Norberts", null, mutableIntStateOf(1500)),
-            Player("Kārlis", null, mutableIntStateOf(1500))
-        )
-    )
-)
+@Serializable
+data class StaticGame(
+    val cardsSupport: Boolean,
+    val players: List<StaticPlayer>,
+    val historicPlayers: List<HistoricPlayer>,
+    val startMillis: Long,
+    val loans: List<StaticLoan>
+) {
+    constructor(game: Game) : this(
+        game.cardsSupport,
+        game.players.map { StaticPlayer(it) },
+        game.historicPlayers,
+        game.startMillis,
+        game.loans.map { StaticLoan(it) })
+}
 
-fun NavController.navigateWithoutTrace(route: String) = navigate(route) {
-    popUpTo(0) {
-        inclusive = true
+var currentGame by mutableStateOf<Game?>(null)
+
+fun NavController.navigateWithoutTrace(route: String) = CoroutineScope(Dispatchers.Main).launch {
+    navigate(route) {
+        popUpTo(0) {
+            inclusive = true
+        }
+    }
+}
+
+object Beep {
+    fun moneyAdd() {
+        CoroutineScope(Dispatchers.IO).launch {
+            ToneGenerator(
+                AudioManager.STREAM_MUSIC,
+                100
+            ).startTone(ToneGenerator.TONE_DTMF_7, 150)
+            delay(200)
+            ToneGenerator(
+                AudioManager.STREAM_MUSIC,
+                100
+            ).startTone(ToneGenerator.TONE_DTMF_6, 150)
+        }
+    }
+
+    fun moneyRemove() {
+        CoroutineScope(Dispatchers.IO).launch {
+            ToneGenerator(
+                AudioManager.STREAM_MUSIC,
+                100
+            ).startTone(ToneGenerator.TONE_DTMF_6, 150)
+            delay(200)
+            ToneGenerator(
+                AudioManager.STREAM_MUSIC,
+                100
+            ).startTone(ToneGenerator.TONE_DTMF_7, 150)
+        }
+    }
+
+    fun error() {
+        CoroutineScope(Dispatchers.IO).launch {
+            ToneGenerator(
+                AudioManager.STREAM_MUSIC,
+                100
+            ).startTone(ToneGenerator.TONE_DTMF_0, 150)
+            delay(200)
+            ToneGenerator(
+                AudioManager.STREAM_MUSIC,
+                100
+            ).startTone(ToneGenerator.TONE_DTMF_0, 150)
+        }
     }
 }
 
 class MainActivity : ComponentActivity() {
+    @Suppress("UnnecessaryOptInAnnotation")
     @OptIn(ExperimentalEncodingApi::class)
     private fun handleNFCEvent(tag: Tag) {
-        if (nfcApiSubscribers.isNotEmpty()) nfcApiSubscribers.last().invoke(Base64.encode(tag.id))
+        if (nfcApiSubscribers.isNotEmpty()) {
+            nfcApiSubscribers.last().invoke(Base64.encode(tag.id))
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        if (currentGame != null) {
+            runBlocking {
+                gameRecoveryDataStore.edit {
+                    it[stringPreferencesKey("savedgame")] =
+                        Json.encodeToString(StaticGame(currentGame!!))
+                }
+            }
+        }
     }
 
     override fun onResume() {
@@ -196,7 +305,10 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        var gameRecoveryDialogOpen by mutableStateOf(false)
         CoroutineScope(Dispatchers.IO).launch {
+            gameRecoveryDialogOpen =
+                gameRecoveryDataStore.data.first().contains(stringPreferencesKey("savedgame"))
             NFCCardColorBindings = Json.decodeFromString(
                 nfcCardBindingDataStore.data.first()[stringPreferencesKey("cards")] ?: return@launch
             )
@@ -238,6 +350,70 @@ class MainActivity : ComponentActivity() {
                         },
                     )
                 }
+                if (gameRecoveryDialogOpen) {
+                    val cs = rememberCoroutineScope()
+                    AlertDialog(
+                        onDismissRequest = { },
+                        title = { Text("Spēles atkopšana", fontSize = 20.sp) },
+                        text = { Text("Krātuvē tika atrasti nepabeigtas spēles dati, vai vēlaties šo spēli turpināt?") },
+                        icon = {
+                            Icon(
+                                Icons.Rounded.Warning,
+                                contentDescription = null,
+                                Modifier.size(40.dp),
+                                tint = colorScheme.error
+                            )
+                        },
+                        confirmButton = {
+                            TextButton(onClick = {
+                                cs.launch {
+                                    gameRecoveryDataStore.edit { prefs ->
+                                        val staticGame = Json.decodeFromString<StaticGame>(
+                                            prefs[stringPreferencesKey("savedgame")]!!
+                                        )
+                                        val players = staticGame.players.map {
+                                            Player(
+                                                it.name,
+                                                it.card,
+                                                mutableIntStateOf(it.money)
+                                            )
+                                        }
+                                        // Associate player objects with loan player objects so money is synced
+                                        currentGame = Game(
+                                            staticGame.cardsSupport,
+                                            players.toMutableStateList(),
+                                            staticGame.historicPlayers.toMutableStateList(),
+                                            staticGame.startMillis,
+                                            staticGame.loans.map {
+                                                Loan(
+                                                    players.find { it1 ->
+                                                        it1.money.intValue == it.from.money && it1.card == it.from.card && it1.name == it.from.name
+                                                    }!!,
+                                                    players.find { it1 -> it1.money.intValue == it.to.money && it1.card == it.to.card && it1.name == it.to.name }!!,
+                                                    it.amount,
+                                                    it.amountToPayBack,
+                                                    it.terms,
+                                                    it.notes
+                                                )
+                                            }.toMutableStateList()
+                                        )
+                                    }
+                                }
+                                gameRecoveryDialogOpen = false
+                            }) {
+                                Text("Atkopt datus".uppercase(), color = colorScheme.tertiary)
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = {
+                                cs.launch { gameRecoveryDataStore.edit { it.clear() } }
+                                gameRecoveryDialogOpen = false
+                            }) {
+                                Text("Atcelt".uppercase())
+                            }
+                        },
+                    )
+                }
                 Surface(
                     modifier = Modifier.fillMaxSize(), color = colorScheme.background
                 ) {
@@ -253,7 +429,7 @@ class MainActivity : ComponentActivity() {
                             WindowCompat.getInsetsController(
                                 window, LocalView.current
                             ).isAppearanceLightStatusBars = surfaceColor.luminance() > 0.25
-                            AnimatedVisibility(visible = currentGame != null) {
+                            if (currentGame != null) {
                                 var timePassed by remember { mutableStateOf("00:00") }
                                 LaunchedEffect(true) {
                                     while (true) {

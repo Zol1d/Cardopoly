@@ -37,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -127,7 +128,10 @@ fun CardsScreen(navController: NavHostController) {
                                 .size(120.dp)
                                 .padding(bottom = 5.dp)
                         )
-                        Text(text = "Pietuviniet karti tālruņa aizmugurei")
+                        Text(
+                            text = "Pietuviniet karti tālruņa aizmugurei",
+                            textAlign = TextAlign.Center
+                        )
                     } else {
                         Text(
                             text = "Karte nolasīta",

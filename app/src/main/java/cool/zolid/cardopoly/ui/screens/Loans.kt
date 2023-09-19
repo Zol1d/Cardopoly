@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -33,6 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -40,6 +42,8 @@ import androidx.navigation.NavHostController
 import cool.zolid.cardopoly.Loan
 import cool.zolid.cardopoly.LoanTerms
 import cool.zolid.cardopoly.MONEY
+import cool.zolid.cardopoly.NFCCardColorBindings
+import cool.zolid.cardopoly.R
 import cool.zolid.cardopoly.currentGame
 import cool.zolid.cardopoly.ui.AlertDialog
 import cool.zolid.cardopoly.ui.Shapes
@@ -91,8 +95,34 @@ fun LoansScreen(navController: NavHostController) {
                                     fontSize = 16.sp
                                 )
                             }
-                            TableValue(viewDialogOpen!!.from.name)
-                            TableValue(viewDialogOpen!!.to.name)
+                            Row {
+                                if (currentGame?.cardsSupport == true) {
+                                    Icon(
+                                        painterResource(id = R.drawable.credit_card),
+                                        contentDescription = null,
+                                        tint = NFCCardColorBindings[viewDialogOpen!!.from.card]
+                                            ?: Color.Unspecified,
+                                        modifier = Modifier
+                                            .padding(end = 5.dp)
+                                            .height(22.dp)
+                                    )
+                                }
+                                TableValue(viewDialogOpen!!.from.name)
+                            }
+                            Row {
+                                if (currentGame?.cardsSupport == true) {
+                                    Icon(
+                                        painterResource(id = R.drawable.credit_card),
+                                        contentDescription = null,
+                                        tint = NFCCardColorBindings[viewDialogOpen!!.to.card]
+                                            ?: Color.Unspecified,
+                                        modifier = Modifier
+                                            .padding(end = 5.dp)
+                                            .height(22.dp)
+                                    )
+                                }
+                                TableValue(viewDialogOpen!!.to.name)
+                            }
                             TableValue("${viewDialogOpen!!.amount}$MONEY")
                             TableValue("${viewDialogOpen!!.amountToPayBack}$MONEY")
                             TableValue(
@@ -126,8 +156,15 @@ fun LoansScreen(navController: NavHostController) {
                 TextButton(
                     onClick = {
                         currentGame!!.loans.remove(viewDialogOpen)
+                        if (currentGame!!.cardsSupport) {
+                            viewDialogOpen!!.to.money.intValue -= viewDialogOpen!!.amountToPayBack
+                            viewDialogOpen!!.from.money.intValue += viewDialogOpen!!.amountToPayBack
+                            Snackbar.showSnackbarMsg("Darījums veiksmīgs")
+                        }
                         viewDialogOpen = null
                     },
+                    enabled = currentGame?.cardsSupport != true || ((viewDialogOpen?.to?.money?.intValue
+                        ?: 0) >= (viewDialogOpen?.amountToPayBack ?: 0)),
                     colors = ButtonDefaults.textButtonColors(contentColor = colorScheme.tertiary)
                 ) {
                     Text("Apmaksāt".uppercase())
@@ -183,18 +220,45 @@ fun LoansScreen(navController: NavHostController) {
                                 .padding(vertical = 5.dp)
                                 .animateItemPlacement()
                         ) {
-                            Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                            Row(
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
                                 Column(Modifier.padding(end = 10.dp)) {
-                                    Text(
-                                        loan.from.name,
-                                        style = Typography.bodyMedium,
-                                    )
+                                    Row {
+                                        if (currentGame?.cardsSupport == true) {
+                                            Icon(
+                                                painterResource(id = R.drawable.credit_card),
+                                                contentDescription = null,
+                                                tint = NFCCardColorBindings[loan.from.card]
+                                                    ?: Color.Unspecified,
+                                                modifier = Modifier
+                                                    .padding(end = 5.dp)
+                                                    .height(22.dp)
+                                            )
+                                        }
+                                        Text(
+                                            loan.from.name,
+                                            style = Typography.bodyMedium,
+                                        )
+                                    }
                                     Row {
                                         Text(
                                             " └>  ",
                                             style = Typography.bodyMedium,
                                             color = colorScheme.secondary
                                         )
+                                        if (currentGame?.cardsSupport == true) {
+                                            Icon(
+                                                painterResource(id = R.drawable.credit_card),
+                                                contentDescription = null,
+                                                tint = NFCCardColorBindings[loan.to.card]
+                                                    ?: Color.Unspecified,
+                                                modifier = Modifier
+                                                    .padding(end = 5.dp)
+                                                    .height(22.dp)
+                                            )
+                                        }
                                         Text(
                                             loan.to.name,
                                             style = Typography.bodyMedium,

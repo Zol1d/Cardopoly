@@ -34,6 +34,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -42,12 +43,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import cool.zolid.cardopoly.Beep
 import cool.zolid.cardopoly.Game
 import cool.zolid.cardopoly.MonopolyColors
 import cool.zolid.cardopoly.NFCCardColorBindings
@@ -79,6 +84,7 @@ fun StartGameScreen(navController: NavHostController, cards_enabled: Boolean) {
                 fun processNFC(b64id: String) {
                     if (cardUid == null && b64id in NFCCardColorBindings && b64id !in addingPlayers.map { it.card }) {
                         cardUid = b64id
+                        Beep.moneyAdd()
                     }
                 }
                 nfcApiSubscribers.add(::processNFC)
@@ -91,7 +97,11 @@ fun StartGameScreen(navController: NavHostController, cards_enabled: Boolean) {
             onDismissRequest = { addDialogOpen = false },
             title = { Text("Pievienot spēlētāju") },
             text = {
-                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(
+                    Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    val focusRequester = remember { FocusRequester() }
                     TextField(
                         value = playerName,
                         onValueChange = {
@@ -103,7 +113,11 @@ fun StartGameScreen(navController: NavHostController, cards_enabled: Boolean) {
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = if (cards_enabled) 10.dp else 0.dp)
+                            .focusRequester(focusRequester)
                     )
+                    LaunchedEffect(true) {
+                        focusRequester.requestFocus()
+                    }
                     AnimatedVisibility(playerName in addingPlayers.map { it.name }) {
                         Text(
                             text = "Kļūda: Spēlētājs ar šādu vārdu jau eksistē",
@@ -119,7 +133,10 @@ fun StartGameScreen(navController: NavHostController, cards_enabled: Boolean) {
                                 .size(120.dp)
                                 .padding(bottom = 5.dp)
                         )
-                        Text(text = "Pietuviniet karti tālruņa aizmugurei")
+                        Text(
+                            text = "Pietuviniet karti tālruņa aizmugurei",
+                            textAlign = TextAlign.Center
+                        )
                     } else if (cards_enabled) {
                         Text(
                             text = "${MonopolyColors[NFCCardColorBindings[cardUid]]} karte",
@@ -156,7 +173,8 @@ fun StartGameScreen(navController: NavHostController, cards_enabled: Boolean) {
                     onClick = {
                         addingPlayers.remove(removeDialogOpen)
                         removeDialogOpen = null
-                    }, colors = ButtonDefaults.textButtonColors(containerColor = colorScheme.errorContainer)
+                    },
+                    colors = ButtonDefaults.textButtonColors(containerColor = colorScheme.errorContainer)
                 ) {
                     Text("Apstiprināt".uppercase())
                 }
@@ -228,9 +246,19 @@ fun StartGameScreen(navController: NavHostController, cards_enabled: Boolean) {
                             ) {
                                 Box(Modifier.fillMaxWidth()) {
                                     if (cards_enabled) {
-                                        Icon(painterResource(id = R.drawable.credit_card), contentDescription = null, modifier = Modifier.align(Alignment.CenterStart), tint = NFCCardColorBindings[player.card] ?: Color.Unspecified)
+                                        Icon(
+                                            painterResource(id = R.drawable.credit_card),
+                                            contentDescription = null,
+                                            modifier = Modifier.align(Alignment.CenterStart),
+                                            tint = NFCCardColorBindings[player.card]
+                                                ?: Color.Unspecified
+                                        )
                                     } else {
-                                        Icon(Icons.Rounded.Person, contentDescription = null, modifier = Modifier.align(Alignment.CenterStart))
+                                        Icon(
+                                            Icons.Rounded.Person,
+                                            contentDescription = null,
+                                            modifier = Modifier.align(Alignment.CenterStart)
+                                        )
                                     }
                                     Text(
                                         player.name,

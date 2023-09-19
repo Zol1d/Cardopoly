@@ -1,5 +1,8 @@
 package cool.zolid.cardopoly.ui
 
+import android.app.Activity
+import android.view.View
+import android.view.WindowManager
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,8 +18,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.rounded.ArrowBack
-import androidx.compose.material.ripple.RippleAlpha
-import androidx.compose.material.ripple.RippleTheme
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -177,7 +178,7 @@ fun AlertDialog(
         tonalElevation,
         DialogProperties(
             properties.dismissOnBackPress,
-            properties.dismissOnClickOutside,
+            false,
             properties.securePolicy,
             usePlatformDefaultWidth = false,
             decorFitsSystemWindows = properties.decorFitsSystemWindows
@@ -296,10 +297,6 @@ fun ColumnScope.CategoryCard(text: String, content: @Composable () -> Unit) {
     }
 }
 
-object NoRippleTheme : RippleTheme {
-    @Composable
-    override fun defaultColor() = Color.Unspecified
-
-    @Composable
-    override fun rippleAlpha(): RippleAlpha = RippleAlpha(0.0f,0.0f,0.0f,0.0f)
+fun View.setKeyboardSupport(adjustToKeyboard: Boolean) {
+    (context as Activity).window.setSoftInputMode(if (adjustToKeyboard) WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE else WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
 }

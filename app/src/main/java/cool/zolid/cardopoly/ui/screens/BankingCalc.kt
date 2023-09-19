@@ -45,7 +45,6 @@ private enum class CalcMode {
 @Composable
 fun BankingCalcScreen(navController: NavHostController) {
     var curentMode by remember { mutableStateOf(CalcMode.DIFFERENCE) }
-
     Scaffold(snackbarHost = { Snackbar.Host() },
         topBar = { StandardTopAppBar(title = "Banķiera kalkulators", navController) }) { pv ->
         Column(
@@ -124,7 +123,8 @@ fun BankingCalcScreen(navController: NavHostController) {
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(top = 10.dp)
                     ) {
-                        TextField(value = sourceValue?.toString() ?: "",
+                        TextField(
+                            value = sourceValue?.toString() ?: "",
                             onValueChange = {
                                 sourceValue = it.toIntOrNull()
                             },
@@ -137,7 +137,8 @@ fun BankingCalcScreen(navController: NavHostController) {
                             modifier = Modifier.weight(1f)
                         )
                         Text(text = " - ")
-                        TextField(value = source2Value?.toString() ?: "",
+                        TextField(
+                            value = source2Value?.toString() ?: "",
                             onValueChange = {
                                 source2Value = it.toIntOrNull()
                             },
@@ -165,7 +166,8 @@ fun BankingCalcScreen(navController: NavHostController) {
                         ), singleLine = true, modifier = Modifier.weight(1f)
                         )
                         Text(text = " % no ")
-                        TextField(value = source2Value?.toString() ?: "",
+                        TextField(
+                            value = source2Value?.toString() ?: "",
                             onValueChange = {
                                 source2Value = it.toIntOrNull()
                             },
