@@ -1,4 +1,5 @@
 package cool.zolid.cardopoly.ui.theme
+
 import androidx.compose.ui.graphics.Color
 
 val md_theme_light_primary = Color(0xFFBA1042)
@@ -30,7 +31,6 @@ val md_theme_light_inversePrimary = Color(0xFFFFB2B9)
 val md_theme_light_surfaceTint = Color(0xFFBA1042)
 val md_theme_light_outlineVariant = Color(0xFFD7C1C2)
 val md_theme_light_scrim = Color(0xFF000000)
-
 val md_theme_dark_primary = Color(0xFFFFB2B9)
 val md_theme_dark_onPrimary = Color(0xFF67001F)
 val md_theme_dark_primaryContainer = Color(0xFF91002F)
@@ -60,6 +60,4 @@ val md_theme_dark_inversePrimary = Color(0xFFBA1042)
 val md_theme_dark_surfaceTint = Color(0xFFFFB2B9)
 val md_theme_dark_outlineVariant = Color(0xFF524344)
 val md_theme_dark_scrim = Color(0xFF000000)
-
-
 // val seed = Color(0xFFB0003B)

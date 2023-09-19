@@ -38,17 +38,21 @@ fun HomeScreen(navController: NavHostController) {
         ) {
             ScreenSelector(
                 rowList = listOf(
-                    listOf(ScreenItem(
-                        "startgame?cards_enabled=true",
-                        "Jauna spēle ar kartēm",
-                        R.drawable.play_circle,
-                        NFCEnabled && NFCCardColorBindings.size > 1
-                    )),
-                    listOf(ScreenItem(
-                        "startgame?cards_enabled=false",
-                        "Jauna spēle bez kartēm",
-                        R.drawable.play_circle
-                    )),
+                    listOf(
+                        ScreenItem(
+                            "startgame?cards_enabled=true",
+                            "Jauna spēle ar kartēm",
+                            R.drawable.play_circle,
+                            NFCEnabled && NFCCardColorBindings.size > 1
+                        )
+                    ),
+                    listOf(
+                        ScreenItem(
+                            "startgame?cards_enabled=false",
+                            "Jauna spēle bez kartēm",
+                            R.drawable.play_circle
+                        )
+                    ),
                     listOf(ScreenItem("cards", "Kartes", R.drawable.cards, NFCEnabled)),
                 ), navController = navController, modifier = Modifier
                     .fillMaxSize()
