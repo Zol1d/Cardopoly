@@ -85,6 +85,7 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import org.mariuszgromada.math.mxparser.License
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.math.abs
@@ -305,6 +306,7 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        License.iConfirmNonCommercialUse("Zolid")
         var gameRecoveryDialogOpen by mutableStateOf(false)
         CoroutineScope(Dispatchers.IO).launch {
             gameRecoveryDialogOpen =
@@ -398,8 +400,8 @@ class MainActivity : ComponentActivity() {
                                             }.toMutableStateList()
                                         )
                                     }
+                                    gameRecoveryDialogOpen = false
                                 }
-                                gameRecoveryDialogOpen = false
                             }) {
                                 Text("Atkopt datus".uppercase(), color = colorScheme.tertiary)
                             }

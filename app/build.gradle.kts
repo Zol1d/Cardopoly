@@ -22,6 +22,7 @@ android {
     defaultConfig {
         applicationId = "cool.zolid.cardopoly"
         minSdk = 28
+        //noinspection OldTargetApi
         targetSdk = 33
         versionCode = code
         versionName = "1.0.0"
@@ -78,5 +79,6 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     implementation("androidx.datastore:datastore-preferences:1.0.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    implementation("androidx.navigation:navigation-compose:2.7.2")
+    implementation("androidx.navigation:navigation-compose:2.7.3")
+    implementation("org.mariuszgromada.math:MathParser.org-mXparser:5.2.1")
 }

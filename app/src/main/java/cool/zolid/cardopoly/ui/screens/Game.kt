@@ -1,6 +1,10 @@
 package cool.zolid.cardopoly.ui.screens
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,6 +26,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalMinimumInteractiveComponentEnforcement
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Scaffold
@@ -70,6 +75,7 @@ import cool.zolid.cardopoly.ui.ScreenItem
 import cool.zolid.cardopoly.ui.ScreenSelector
 import cool.zolid.cardopoly.ui.Shapes
 import cool.zolid.cardopoly.ui.Snackbar
+import cool.zolid.cardopoly.ui.dialogCalculator
 import cool.zolid.cardopoly.ui.extraPadding
 import cool.zolid.cardopoly.ui.theme.Typography
 import kotlinx.coroutines.delay
@@ -81,7 +87,10 @@ private enum class BankOperation {
     TRANSFER
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class,
+    ExperimentalAnimationApi::class
+)
 @Composable
 fun GameScreen(navController: NavHostController) {
     val ctx = LocalContext.current
@@ -180,7 +189,7 @@ fun GameScreen(navController: NavHostController) {
                 if (!sumLockedIn) {
                     Row(
                         Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(5.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         val focusRequester = remember { FocusRequester() }
@@ -202,16 +211,13 @@ fun GameScreen(navController: NavHostController) {
                         LaunchedEffect(true) {
                             focusRequester.requestFocus()
                         }
-                        TextButton(
-                            onClick = { /*TODO*/ },
-                            shape = Shapes.listItem,
-                            colors = ButtonDefaults.textButtonColors(
-                                containerColor = colorScheme.secondary,
-                                contentColor = colorScheme.onSecondary
-                            ),
+                        val dialogCalc = dialogCalculator(resultPaste = { sum = it },
+                            initialExpr = { sum?.toString() ?: "" })
+                        IconButton(
+                            onClick = { dialogCalc() },
                             modifier = Modifier.requiredHeight(IntrinsicSize.Max)
                         ) {
-                            Text(text = "%", style = Typography.bodyLarge)
+                            Icon(painterResource(id = R.drawable.calculate), null)
                         }
                     }
                 } else {
@@ -401,8 +407,16 @@ fun GameScreen(navController: NavHostController) {
                             ) {
                                 Box(Modifier.fillMaxWidth()) {
                                     if (currentGame?.cardsSupport == true) {
+                                        val intvalue by animateIntAsState(
+                                            targetValue = player.money.intValue,
+                                            label = "",
+                                            animationSpec = spring(
+                                                visibilityThreshold = 1,
+                                                stiffness = Spring.StiffnessVeryLow
+                                            )
+                                        )
                                         Text(
-                                            text = "${player.money.intValue}$MONEY",
+                                            text = "$intvalue$MONEY",
                                             color = colorScheme.tertiary,
                                             style = Typography.bodyLarge,
                                             modifier = Modifier.align(Alignment.TopEnd)

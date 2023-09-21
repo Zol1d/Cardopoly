@@ -12,12 +12,13 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -59,6 +60,7 @@ import cool.zolid.cardopoly.ui.SectionDivider
 import cool.zolid.cardopoly.ui.Shapes
 import cool.zolid.cardopoly.ui.Snackbar
 import cool.zolid.cardopoly.ui.StandardTopAppBar
+import cool.zolid.cardopoly.ui.dialogCalculator
 import cool.zolid.cardopoly.ui.extraPadding
 import cool.zolid.cardopoly.ui.setKeyboardSupport
 import cool.zolid.cardopoly.ui.theme.Typography
@@ -242,7 +244,8 @@ fun NewLoanScreen(navController: NavHostController) {
             ) {
                 val focusRequester = remember { FocusRequester() }
                 Column(Modifier.weight(1f)) {
-                    TextField(value = amount?.toString() ?: "",
+                    TextField(
+                        value = amount?.toString() ?: "",
                         onValueChange = {
                             amount = it.toIntOrNull().takeIf { it != null && it > 0 }
                         },
@@ -254,16 +257,19 @@ fun NewLoanScreen(navController: NavHostController) {
                         suffix = { Text(text = MONEY) },
                         modifier = Modifier.focusRequester(focusRequester)
                     )
-                    TextButton(
-                        onClick = { /*TODO*/ },
-                        shape = Shapes.listItem,
-                        colors = ButtonDefaults.textButtonColors(
+                    val dialogCalc = dialogCalculator(resultPaste = { amount = it },
+                        initialExpr = { amount?.toString() ?: "" })
+                    IconButton(
+                        onClick = { dialogCalc() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 5.dp),
+                        colors = IconButtonDefaults.iconButtonColors(
                             containerColor = colorScheme.secondary,
                             contentColor = colorScheme.onSecondary
                         ),
-                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(text = "%", style = Typography.bodyLarge)
+                        Icon(painterResource(id = R.drawable.calculate), null)
                     }
                 }
                 LaunchedEffect(true) {
@@ -284,16 +290,19 @@ fun NewLoanScreen(navController: NavHostController) {
                         singleLine = true,
                         suffix = { Text(text = MONEY) },
                     )
-                    TextButton(
-                        onClick = { /*TODO*/ },
-                        shape = Shapes.listItem,
-                        colors = ButtonDefaults.textButtonColors(
+                    val dialogCalc = dialogCalculator(resultPaste = { amountToPayBack = it },
+                        initialExpr = { amount?.toString() ?: amountToPayBack?.toString() ?: "" })
+                    IconButton(
+                        onClick = { dialogCalc() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 5.dp),
+                        colors = IconButtonDefaults.iconButtonColors(
                             containerColor = colorScheme.secondary,
                             contentColor = colorScheme.onSecondary
                         ),
-                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(text = "%", style = Typography.bodyLarge)
+                        Icon(painterResource(id = R.drawable.calculate), null)
                     }
                 }
             }

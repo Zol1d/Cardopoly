@@ -20,8 +20,6 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -280,23 +278,7 @@ fun ColumnScope.SectionDivider(text: String, padding: Boolean = true) {
     Divider()
 }
 
-@Composable
-fun ColumnScope.CategoryCard(text: String, content: @Composable () -> Unit) {
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = colorScheme.secondaryContainer,
-            contentColor = colorScheme.onSecondaryContainer
-        )
-    ) {
-        Text(
-            text = text, style = Typography.bodyLarge, modifier = Modifier
-                .align(Alignment.Start)
-//            .padding(top = if (padding) 10.dp else 0.dp)
-        )
-        content()
-    }
-}
-
+@Suppress("DEPRECATION")
 fun View.setKeyboardSupport(adjustToKeyboard: Boolean) {
     (context as Activity).window.setSoftInputMode(if (adjustToKeyboard) WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE else WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
 }
