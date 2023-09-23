@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
@@ -27,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,15 +38,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import cool.zolid.cardopoly.Beep
 import cool.zolid.cardopoly.Loan
 import cool.zolid.cardopoly.LoanTerms
 import cool.zolid.cardopoly.MONEY
 import cool.zolid.cardopoly.NFCCardColorBindings
 import cool.zolid.cardopoly.R
 import cool.zolid.cardopoly.currentGame
+import cool.zolid.cardopoly.nfcApiSubscribers
 import cool.zolid.cardopoly.ui.AlertDialog
 import cool.zolid.cardopoly.ui.Shapes
 import cool.zolid.cardopoly.ui.Snackbar
@@ -56,6 +61,7 @@ import cool.zolid.cardopoly.ui.theme.Typography
 @Composable
 fun LoansScreen(navController: NavHostController) {
     var viewDialogOpen by remember { mutableStateOf<Loan?>(null) }
+    var payDialogOpen by remember { mutableStateOf<Loan?>(null) }
 
     if (viewDialogOpen != null) {
         AlertDialog(
@@ -123,8 +129,8 @@ fun LoansScreen(navController: NavHostController) {
                                 }
                                 TableValue(viewDialogOpen!!.to.name)
                             }
-                            TableValue("${viewDialogOpen!!.amount}$MONEY")
-                            TableValue("${viewDialogOpen!!.amountToPayBack}$MONEY")
+                            TableValue("${viewDialogOpen!!.amount}$MONEY", colorScheme.tertiary)
+                            TableValue("${viewDialogOpen!!.amountToPayBack}$MONEY", colorScheme.tertiary)
                             TableValue(
                                 when (viewDialogOpen!!.terms) {
                                     is LoanTerms.Custom -> (viewDialogOpen!!.terms as LoanTerms.Custom).terms
@@ -155,11 +161,10 @@ fun LoansScreen(navController: NavHostController) {
             dismissButton = {
                 TextButton(
                     onClick = {
-                        currentGame!!.loans.remove(viewDialogOpen)
                         if (currentGame!!.cardsSupport) {
-                            viewDialogOpen!!.to.money.intValue -= viewDialogOpen!!.amountToPayBack
-                            viewDialogOpen!!.from.money.intValue += viewDialogOpen!!.amountToPayBack
-                            Snackbar.showSnackbarMsg("Darījums veiksmīgs")
+                            payDialogOpen = viewDialogOpen
+                        } else {
+                            currentGame!!.loans.remove(viewDialogOpen)
                         }
                         viewDialogOpen = null
                     },
@@ -168,6 +173,69 @@ fun LoansScreen(navController: NavHostController) {
                     colors = ButtonDefaults.textButtonColors(contentColor = colorScheme.tertiary)
                 ) {
                     Text("Apmaksāt".uppercase())
+                }
+            }
+        )
+    }
+    if (payDialogOpen != null) {
+        var toTapped by remember { mutableStateOf(false) }
+        DisposableEffect(true) {
+            fun processNFC(b64id: String) {
+                if (!toTapped) {
+                    if (payDialogOpen!!.to.card == b64id) {
+                        toTapped = true
+                        Beep.moneyRemove()
+                    } else {
+                        Beep.error()
+                        payDialogOpen = null
+                        Snackbar.showSnackbarMsg("Aizdevuma saņēmēja karte neskrīt", true)
+                    }
+                } else {
+                    if (payDialogOpen!!.from.card == b64id) {
+                        currentGame!!.loans.remove(payDialogOpen)
+                        payDialogOpen!!.to.money.intValue -= payDialogOpen!!.amountToPayBack
+                        payDialogOpen!!.from.money.intValue += payDialogOpen!!.amountToPayBack
+                        Snackbar.showSnackbarMsg("Darījums veiksmīgs")
+                        Beep.moneyAdd()
+                        payDialogOpen = null
+                    } else {
+                        Beep.error()
+                        payDialogOpen = null
+                        Snackbar.showSnackbarMsg("Aizdevuma devēja karte neskrīt", true)
+                    }
+                }
+            }
+            nfcApiSubscribers.add(::processNFC)
+            onDispose {
+                nfcApiSubscribers.remove(::processNFC)
+            }
+        }
+        AlertDialog(
+            onDismissRequest = { payDialogOpen = null },
+            title = { Text("Atmaksāt aizdevumu") },
+            text = {
+                Column(
+                    Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        painterResource(id = R.drawable.round_contactless),
+                        "NFC",
+                        modifier = Modifier
+                            .size(120.dp)
+                            .padding(bottom = 5.dp)
+                    )
+                    Text(
+                        text = "Pietuviniet aizdevuma ${if (!toTapped) "saņēmēja" else "devēja"} karti tālruņa aizmugurei",
+                        textAlign = TextAlign.Center
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = { payDialogOpen = null },
+                ) {
+                    Text("Atcelt".uppercase())
                 }
             }
         )
