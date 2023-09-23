@@ -7,12 +7,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButtonDefaults
@@ -29,6 +29,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -56,7 +57,7 @@ import cool.zolid.cardopoly.navigateWithoutTrace
 import cool.zolid.cardopoly.nfcApiSubscribers
 import cool.zolid.cardopoly.ui.AlertDialog
 import cool.zolid.cardopoly.ui.ExposedDropDownMenu
-import cool.zolid.cardopoly.ui.SectionDivider
+import cool.zolid.cardopoly.ui.SegmentedButtons
 import cool.zolid.cardopoly.ui.Shapes
 import cool.zolid.cardopoly.ui.Snackbar
 import cool.zolid.cardopoly.ui.StandardTopAppBar
@@ -65,7 +66,6 @@ import cool.zolid.cardopoly.ui.extraPadding
 import cool.zolid.cardopoly.ui.setKeyboardSupport
 import cool.zolid.cardopoly.ui.theme.Typography
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewLoanScreen(navController: NavHostController) {
     val view = LocalView.current
@@ -79,7 +79,7 @@ fun NewLoanScreen(navController: NavHostController) {
     var to by remember { mutableStateOf<Player?>(null) }
     var amount by remember { mutableStateOf<Int?>(null) }
     var amountToPayBack by remember { mutableStateOf<Int?>(null) }
-    var terms by remember { mutableStateOf<String?>(null) }
+    var terms by remember { mutableIntStateOf(0) }
     var customTerms by remember { mutableStateOf<String?>(null) }
     var lapTerms by remember { mutableStateOf<Int?>(null) }
     var notes by remember { mutableStateOf<String?>(null) }
@@ -92,7 +92,7 @@ fun NewLoanScreen(navController: NavHostController) {
                 amount,
                 amountToPayBack,
                 terms
-            ).all { it != null } && (if (terms!! == "Apļi") lapTerms != null else customTerms != null) && (amount!! <= amountToPayBack!!)
+            ).all { it != null } && (if (terms == 0) lapTerms != null else customTerms != null) && (amount!! <= amountToPayBack!!)
         }
     }
 
@@ -115,7 +115,7 @@ fun NewLoanScreen(navController: NavHostController) {
                 to = to!!,
                 amount = amount!!,
                 amountToPayBack = amountToPayBack!!,
-                terms = if (terms == "Apļi") LoanTerms.Laps(lapTerms!!) else LoanTerms.Custom(
+                terms = if (terms == 0) LoanTerms.Laps(lapTerms!!) else LoanTerms.Custom(
                     customTerms!!
                 ),
                 notes = notes
@@ -209,18 +209,26 @@ fun NewLoanScreen(navController: NavHostController) {
                 .fillMaxWidth()
                 .padding(extraPadding(pv))
                 .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
+            SegmentedButtons(
+                itemsList = listOf("Apļi", "Metieni", "Pielāgots"),
+                onSelectedItem = {
+                    terms = it
+                },
+                initialSelectionIndex = terms,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 10.dp)
+            )
             if (currentGame?.cardsSupport != true) {
-                SectionDivider(text = "Spēlētāji", false)
                 ExposedDropDownMenu(
                     items = currentGame!!.players, selectedItem = from, onSelectedItem = {
                         if (it == to) {
                             to = from
                         }
                         from = it
-                    }, label = "Devējs", nullReplacement = "Izvēlieties devēju"
+                    }, label = "Devējs", nullReplacement = "Izvēlieties devēju", modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
                 Icon(
                     Icons.Rounded.ArrowBack,
@@ -228,6 +236,7 @@ fun NewLoanScreen(navController: NavHostController) {
                     modifier = Modifier
                         .rotate(270f)
                         .size(36.dp)
+                        .align(Alignment.CenterHorizontally)
                 )
                 ExposedDropDownMenu(
                     items = currentGame!!.players, selectedItem = to, onSelectedItem = {
@@ -235,10 +244,9 @@ fun NewLoanScreen(navController: NavHostController) {
                             from = to
                         }
                         to = it
-                    }, label = "Saņēmējs", nullReplacement = "Izvēlieties saņēmēju"
+                    }, label = "Saņēmējs", nullReplacement = "Izvēlieties saņēmēju", modifier = Modifier.align(Alignment.CenterHorizontally).padding(bottom = 20.dp)
                 )
             }
-            SectionDivider(text = "Summas")
             Row(
                 Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
@@ -249,7 +257,7 @@ fun NewLoanScreen(navController: NavHostController) {
                         onValueChange = {
                             amount = it.toIntOrNull().takeIf { it != null && it > 0 }
                         },
-                        label = { Text("Aizdevums") },
+                        label = { Text("Summa") },
                         keyboardOptions = KeyboardOptions(
                             imeAction = ImeAction.Next, keyboardType = KeyboardType.Number
                         ),
@@ -281,7 +289,8 @@ fun NewLoanScreen(navController: NavHostController) {
                     TextField(
                         value = amountToPayBack?.toString() ?: "",
                         onValueChange = {
-                            amountToPayBack = it.toIntOrNull().takeIf { it != null && it > 0 }
+                            amountToPayBack =
+                                it.toIntOrNull().takeIf { it != null && it > 0 }
                         },
                         label = { Text("Atmaksa") },
                         keyboardOptions = KeyboardOptions(
@@ -290,8 +299,11 @@ fun NewLoanScreen(navController: NavHostController) {
                         singleLine = true,
                         suffix = { Text(text = MONEY) },
                     )
-                    val dialogCalc = dialogCalculator(resultPaste = { amountToPayBack = it },
-                        initialExpr = { amount?.toString() ?: amountToPayBack?.toString() ?: "" })
+                    val dialogCalc =
+                        dialogCalculator(resultPaste = { amountToPayBack = it },
+                            initialExpr = {
+                                amount?.toString() ?: amountToPayBack?.toString() ?: ""
+                            })
                     IconButton(
                         onClick = { dialogCalc() },
                         modifier = Modifier
@@ -323,48 +335,47 @@ fun NewLoanScreen(navController: NavHostController) {
                     modifier = Modifier.padding(top = 5.dp)
                 )
             }
-            SectionDivider(text = "Nosacījumi")
-            ExposedDropDownMenu(
-                items = remember { listOf("Apļi", "Pielāgots") },
-                selectedItem = terms,
-                onSelectedItem = { terms = it },
-                label = "Nosacījumu vieds",
-                nullReplacement = "Izvēlieties nosacījumu viedu"
-            )
-            AnimatedVisibility(terms == "Pielāgots") {
-                TextField(
-                    value = customTerms ?: "",
-                    onValueChange = {
-                        customTerms = it.trim().takeUnless { it.isBlank() }
-                    },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                    label = { Text(text = "Nosacījumi") },
-                    singleLine = false,
-                )
+            when (terms) {
+                2 -> {
+                    TextField(
+                        value = customTerms ?: "",
+                        onValueChange = {
+                            customTerms = it.trim().takeUnless { it.isBlank() }
+                        },
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                        label = { Text(text = "Nosacījumi") },
+                        singleLine = false,
+                        modifier = Modifier.fillMaxWidth().padding(top = 5.dp)
+                    )
+                }
+
+                0 -> {
+                    TextField(
+                        value = lapTerms?.toString() ?: "",
+                        onValueChange = {
+                            lapTerms = it.toIntOrNull().takeIf { it != null && it > 0 }
+                        },
+                        keyboardOptions = KeyboardOptions(
+                            imeAction = ImeAction.Done, keyboardType = KeyboardType.Number
+                        ),
+                        label = { Text(text = "Apļi") },
+                        singleLine = true,
+                        modifier = Modifier.width(140.dp).align(Alignment.End).padding(top = 5.dp)
+                    )
+                }
             }
-            AnimatedVisibility(terms == "Apļi") {
-                TextField(
-                    value = lapTerms?.toString() ?: "",
-                    onValueChange = {
-                        lapTerms = it.toIntOrNull().takeIf { it != null && it > 0 }
-                    },
-                    keyboardOptions = KeyboardOptions(
-                        imeAction = ImeAction.Done, keyboardType = KeyboardType.Number
-                    ),
-                    label = { Text(text = "Apļu skaits") },
-                    singleLine = true,
-                )
-            }
-            SectionDivider(text = "Piezīmes")
             TextField(
                 value = notes ?: "",
                 onValueChange = {
                     notes = it.trim().takeUnless { it.isBlank() }
                 },
                 label = { Text("Piezīmes") },
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                 singleLine = false,
-                modifier = if (confirmBtnShown) Modifier.padding(bottom = 80.dp) else Modifier
+                modifier = (if (confirmBtnShown) Modifier.padding(bottom = 80.dp) else Modifier)
+                    .padding(
+                        top = 30.dp
+                    )
+                    .fillMaxWidth()
             )
         }
     }

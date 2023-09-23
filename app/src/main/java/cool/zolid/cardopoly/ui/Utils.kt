@@ -4,13 +4,17 @@ import android.app.Activity
 import android.view.View
 import android.view.WindowManager
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -27,6 +31,7 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -38,6 +43,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -53,6 +59,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import cool.zolid.cardopoly.ui.theme.Typography
 import kotlinx.coroutines.CoroutineScope
@@ -61,7 +68,7 @@ import kotlinx.coroutines.launch
 
 object Snackbar {
     private var containerColorState by mutableStateOf<Color?>(null)
-    private var errorState by mutableStateOf<Boolean>(false)
+    private var errorState by mutableStateOf(false)
     private val hostState = SnackbarHostState()
     fun showSnackbarMsg(
         msg: String,
@@ -70,6 +77,7 @@ object Snackbar {
         containerColor: Color? = null
     ) {
         CoroutineScope(Dispatchers.Main).launch {
+            if (hostState.currentSnackbarData != null) hostState.currentSnackbarData?.dismiss()
             errorState = error
             containerColorState = containerColor
             hostState.showSnackbar(msg, duration = duration)
@@ -282,3 +290,80 @@ fun ColumnScope.SectionDivider(text: String, padding: Boolean = true) {
 fun View.setKeyboardSupport(adjustToKeyboard: Boolean) {
     (context as Activity).window.setSoftInputMode(if (adjustToKeyboard) WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE else WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
 }
+
+@Composable
+fun SegmentedButtons(
+    itemsList: List<String>,
+    modifier: Modifier = Modifier,
+    initialSelectionIndex: Int = 0,
+    onSelectedItem: (index: Int) -> Unit,
+) {
+    Row(modifier = modifier.fillMaxWidth()) {
+        val cornerRadius = 15
+        var selectedIndex by remember { mutableIntStateOf(initialSelectionIndex) }
+
+        itemsList.forEachIndexed { index, item ->
+            OutlinedButton(
+                onClick = {
+                    selectedIndex = index
+                    onSelectedItem(index)
+                },
+                modifier = when (index) {
+                    0 -> Modifier.offset(0.dp, 0.dp)
+                    else -> Modifier.offset((-1 * index).dp, 0.dp)
+                }
+                    .zIndex(if (selectedIndex == index) 1f else 0f)
+                    .weight(1f),
+                contentPadding = PaddingValues(horizontal = 2.dp),
+                shape = when (index) {
+                    0 -> RoundedCornerShape(
+                        topStartPercent = cornerRadius,
+                        topEndPercent = 0,
+                        bottomStartPercent = cornerRadius,
+                        bottomEndPercent = 0
+                    )
+
+                    itemsList.size - 1 -> RoundedCornerShape(
+                        topStartPercent = 0,
+                        topEndPercent = cornerRadius,
+                        bottomStartPercent = 0,
+                        bottomEndPercent = cornerRadius
+                    )
+
+                    else -> RoundedCornerShape(0)
+                },
+                border = BorderStroke(
+                    1.dp,
+                    if (selectedIndex == index) colorScheme.outline else colorScheme.outline.copy(
+                        alpha = 0.75f
+                    )
+                ),
+                colors = if (selectedIndex == index) {
+                    ButtonDefaults.outlinedButtonColors(
+                        containerColor = colorScheme.primary,
+                        contentColor = colorScheme.onPrimary
+                    )
+                } else {
+                    ButtonDefaults.outlinedButtonColors(
+                        containerColor = colorScheme.surface,
+                        contentColor = colorScheme.onPrimaryContainer
+                    )
+                }
+            ) {
+                Text(item)
+            }
+        }
+    }
+}
+//@Composable
+//fun CategoryCard(content: @Composable () -> Unit) {
+//    Card(Modifier.fillMaxWidth()) {
+//        Column(Modifier.fillMaxWidth().padding(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+//            Text(
+//                text = "Summas",
+//                style = Typography.titleMedium
+//            )
+//            content()
+//        }
+//    }
+//}
