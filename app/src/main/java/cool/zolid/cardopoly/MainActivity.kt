@@ -34,7 +34,6 @@ import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -67,6 +66,7 @@ import cool.zolid.cardopoly.ui.screens.CardsScreen
 import cool.zolid.cardopoly.ui.screens.GameScreen
 import cool.zolid.cardopoly.ui.screens.HomeScreen
 import cool.zolid.cardopoly.ui.screens.LoansScreen
+import cool.zolid.cardopoly.ui.screens.LogsScreen
 import cool.zolid.cardopoly.ui.screens.NewLoanScreen
 import cool.zolid.cardopoly.ui.screens.StartGameScreen
 import cool.zolid.cardopoly.ui.theme.AppTheme
@@ -77,6 +77,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -173,12 +175,33 @@ data class StaticLoan(
     )
 }
 
+@Serializable
+enum class LogType {
+    ADD_MONEY,
+    REMOVE_MONEY,
+    TRANSFER_MONEY,
+    REMOVE_PLAYER,
+    CREATE_LOAN,
+    PAYBACK_LOAN
+}
+
+@Serializable
+data class Log(
+    val type: LogType,
+    // Players can be static since their money wont be needed
+    val player: StaticPlayer,
+    val toPlayer: StaticPlayer?,
+    val amount: Int?,
+    val time: Instant = Clock.System.now()
+)
+
 data class Game(
     val cardsSupport: Boolean,
     val players: SnapshotStateList<Player>,
-    val historicPlayers: SnapshotStateList<HistoricPlayer> = mutableStateListOf(),
+    val historicPlayers: SnapshotStateList<HistoricPlayer>,
+    val loans: SnapshotStateList<Loan>,
+    val logs: MutableList<Log>,
     val startMillis: Long = System.currentTimeMillis(),
-    val loans: SnapshotStateList<Loan> = mutableStateListOf()
 ) {
     init {
         require(players.size > 1) { "Game: Players cant be less than 2" }
@@ -191,14 +214,16 @@ data class StaticGame(
     val players: List<StaticPlayer>,
     val historicPlayers: List<HistoricPlayer>,
     val startMillis: Long,
-    val loans: List<StaticLoan>
+    val loans: List<StaticLoan>,
+    val logs: List<Log>
 ) {
     constructor(game: Game) : this(
         game.cardsSupport,
         game.players.map { StaticPlayer(it) },
         game.historicPlayers,
         game.startMillis,
-        game.loans.map { StaticLoan(it) })
+        game.loans.map { StaticLoan(it) }, game.logs
+    )
 }
 
 var currentGame by mutableStateOf<Game?>(null)
@@ -385,7 +410,6 @@ class MainActivity : ComponentActivity() {
                                             staticGame.cardsSupport,
                                             players.toMutableStateList(),
                                             staticGame.historicPlayers.toMutableStateList(),
-                                            staticGame.startMillis,
                                             staticGame.loans.map {
                                                 Loan(
                                                     players.find { it1 ->
@@ -397,7 +421,9 @@ class MainActivity : ComponentActivity() {
                                                     it.terms,
                                                     it.notes
                                                 )
-                                            }.toMutableStateList()
+                                            }.toMutableStateList(),
+                                            staticGame.logs.toMutableList(),
+                                            staticGame.startMillis,
                                         )
                                     }
                                     gameRecoveryDialogOpen = false
@@ -490,6 +516,7 @@ class MainActivity : ComponentActivity() {
                             composable("cards") { CardsScreen(navController) }
                             composable("newloan") { NewLoanScreen(navController) }
                             composable("bankingcalc") { BankingCalcScreen(navController) }
+                            composable("logs") { LogsScreen(navController) }
                         }
                     }
                 }

@@ -61,11 +61,14 @@ import androidx.navigation.NavHostController
 import cool.zolid.cardopoly.Beep
 import cool.zolid.cardopoly.HistoricPlayer
 import cool.zolid.cardopoly.Json
+import cool.zolid.cardopoly.Log
+import cool.zolid.cardopoly.LogType
 import cool.zolid.cardopoly.MONEY
 import cool.zolid.cardopoly.NFCCardColorBindings
 import cool.zolid.cardopoly.Player
 import cool.zolid.cardopoly.R
 import cool.zolid.cardopoly.StaticGame
+import cool.zolid.cardopoly.StaticPlayer
 import cool.zolid.cardopoly.currentGame
 import cool.zolid.cardopoly.gameRecoveryDataStore
 import cool.zolid.cardopoly.navigateWithoutTrace
@@ -114,12 +117,14 @@ fun GameScreen(navController: NavHostController) {
         var cardTrasferFromUid by remember { mutableStateOf<String?>(null) }
         DisposableEffect(true) {
             fun processNFC(b64id: String) {
-                if (sumLockedIn && currentGame?.players?.any { it.card == b64id } == true) {
+                val player = currentGame?.players?.find { it.card == b64id }
+                if (sumLockedIn && player != null) {
                     when (currentBankOperationDialog) {
                         BankOperation.ADD -> {
-                            currentGame!!.players.find { it.card == b64id }!!.money.intValue += sum!!
+                            player.money.intValue += sum!!
                             Snackbar.showSnackbarMsg("Darījums veiksmīgs")
                             Beep.moneyAdd()
+                            currentGame!!.logs.add(Log(LogType.ADD_MONEY, StaticPlayer(player), null, sum!!))
                             currentBankOperationDialog = null
                         }
 
@@ -135,6 +140,7 @@ fun GameScreen(navController: NavHostController) {
                                 money.intValue -= sum!!
                                 Snackbar.showSnackbarMsg("Darījums veiksmīgs")
                                 Beep.moneyRemove()
+                                currentGame!!.logs.add(Log(LogType.REMOVE_MONEY, StaticPlayer(player), null, sum!!))
                             }
                             currentBankOperationDialog = null
                         }
@@ -144,19 +150,20 @@ fun GameScreen(navController: NavHostController) {
                                 cardTrasferFromUid = b64id
                                 Beep.moneyRemove()
                             } else if (cardTrasferFromUid != b64id) {
-                                val moneyFromAcc =
-                                    currentGame!!.players.find { it.card == cardTrasferFromUid }!!.money
-                                if (moneyFromAcc.intValue < sum!!) {
+                                val fromPlayer =
+                                    currentGame!!.players.find { it.card == cardTrasferFromUid }!!
+                                if (fromPlayer.money.intValue < sum!!) {
                                     Snackbar.showSnackbarMsg(
                                         "Darījums neveiksmīgs - nav pietiekamu līdzekļu",
                                         true
                                     )
                                     Beep.error()
                                 } else {
-                                    moneyFromAcc.intValue -= sum!!
+                                    fromPlayer.money.intValue -= sum!!
                                     currentGame!!.players.find { it.card == b64id }!!.money.intValue += sum!!
                                     Snackbar.showSnackbarMsg("Darījums veiksmīgs")
                                     Beep.moneyAdd()
+                                    currentGame!!.logs.add(Log(LogType.TRANSFER_MONEY, StaticPlayer(fromPlayer), StaticPlayer(player), sum!!))
                                 }
                                 currentBankOperationDialog = null
                             }
@@ -298,6 +305,7 @@ fun GameScreen(navController: NavHostController) {
             )
             currentGame!!.players.remove(removePlayerDialog)
             Beep.moneyRemove()
+            currentGame!!.logs.add(Log(LogType.REMOVE_PLAYER, StaticPlayer(removePlayerDialog!!), null, null))
             removePlayerDialog = null
         }
         DisposableEffect(true) {
@@ -531,7 +539,12 @@ fun GameScreen(navController: NavHostController) {
                         ) else listOf(),
                         listOf(
                             ScreenItem("loans", "Aizdevumi", R.drawable.request_quote),
+                            if (currentGame?.cardsSupport == true)
                             ScreenItem(
+                                "logs",
+                                "Darījumi",
+                                R.drawable.history
+                            ) else ScreenItem(
                                 "bankingcalc",
                                 "Kalkulators",
                                 R.drawable.calculate

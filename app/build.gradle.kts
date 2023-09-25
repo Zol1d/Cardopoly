@@ -81,4 +81,5 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
     implementation("androidx.navigation:navigation-compose:2.7.3")
     implementation("org.mariuszgromada.math:MathParser.org-mXparser:5.2.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
 }

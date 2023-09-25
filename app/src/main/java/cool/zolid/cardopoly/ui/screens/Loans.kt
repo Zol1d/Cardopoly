@@ -45,9 +45,12 @@ import androidx.navigation.NavHostController
 import cool.zolid.cardopoly.Beep
 import cool.zolid.cardopoly.Loan
 import cool.zolid.cardopoly.LoanTerms
+import cool.zolid.cardopoly.Log
+import cool.zolid.cardopoly.LogType
 import cool.zolid.cardopoly.MONEY
 import cool.zolid.cardopoly.NFCCardColorBindings
 import cool.zolid.cardopoly.R
+import cool.zolid.cardopoly.StaticPlayer
 import cool.zolid.cardopoly.currentGame
 import cool.zolid.cardopoly.nfcApiSubscribers
 import cool.zolid.cardopoly.ui.AlertDialog
@@ -197,6 +200,7 @@ fun LoansScreen(navController: NavHostController) {
                         payDialogOpen!!.from.money.intValue += payDialogOpen!!.amountToPayBack
                         Snackbar.showSnackbarMsg("Darījums veiksmīgs")
                         Beep.moneyAdd()
+                        currentGame!!.logs.add(Log(LogType.PAYBACK_LOAN, StaticPlayer(payDialogOpen!!.to), StaticPlayer(payDialogOpen!!.from), payDialogOpen!!.amountToPayBack))
                         payDialogOpen = null
                     } else {
                         Beep.error()

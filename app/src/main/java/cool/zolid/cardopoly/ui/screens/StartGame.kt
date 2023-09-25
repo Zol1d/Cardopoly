@@ -279,7 +279,7 @@ fun StartGameScreen(navController: NavHostController, cards_enabled: Boolean) {
             ) {
                 Button(
                     onClick = {
-                        currentGame = Game(cards_enabled, addingPlayers)
+                        currentGame = Game(cards_enabled, addingPlayers, mutableStateListOf(), mutableStateListOf(), mutableListOf())
                         navController.navigateWithoutTrace("game")
                     },
                     shape = Shapes.largeButton,
