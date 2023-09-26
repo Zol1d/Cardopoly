@@ -81,7 +81,10 @@ import cool.zolid.cardopoly.ui.Snackbar
 import cool.zolid.cardopoly.ui.dialogCalculator
 import cool.zolid.cardopoly.ui.extraPadding
 import cool.zolid.cardopoly.ui.theme.Typography
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 
 private enum class BankOperation {
@@ -270,8 +273,10 @@ fun GameScreen(navController: NavHostController) {
             confirmButton = {
                 TextButton(
                     onClick = {
-                        // TODO: Save game and display post-match popup
                         currentGame = null
+                        CoroutineScope(Dispatchers.IO).launch {
+                            ctx.gameRecoveryDataStore.edit { it.clear() }
+                        }
                         navController.navigateWithoutTrace("home")
                     },
                     colors = ButtonDefaults.textButtonColors(
