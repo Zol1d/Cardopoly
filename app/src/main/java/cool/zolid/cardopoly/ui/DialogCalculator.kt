@@ -88,12 +88,17 @@ fun dialogCalculator(
                         focusRequester.requestFocus()
                     }
                     @Composable
-                    fun ExpressionButton(text: String) {
+                    fun ExpressionButton(text: Char) {
                         TextButton(
                             onClick = {
                                 expression = TextFieldValue(
-                                    expression.text + text,
-                                    TextRange(expression.text.length + text.length)
+                                    expression.text.toMutableList().apply {
+                                        add(
+                                        expression.selection.start,
+                                        text
+                                    )
+                                    }.joinToString(""),
+                                    TextRange(expression.text.length + 1)
                                 )
                             },
                             colors = ButtonDefaults.textButtonColors(
@@ -102,17 +107,17 @@ fun dialogCalculator(
                             ),
                             shape = CircleShape
                         ) {
-                            Text(text = text, style = Typography.bodyLarge)
+                            Text(text = text.toString(), style = Typography.bodyLarge)
                         }
                     }
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        ExpressionButton("+")
-                        ExpressionButton("-")
-                        ExpressionButton("×")
-                        ExpressionButton("÷")
-                        ExpressionButton("(")
-                        ExpressionButton(")")
-                        ExpressionButton("%")
+                        ExpressionButton('+')
+                        ExpressionButton('-')
+                        ExpressionButton('×')
+                        ExpressionButton('÷')
+                        ExpressionButton('(')
+                        ExpressionButton(')')
+                        ExpressionButton('%')
                         TextButton(
                             onClick = {
                                 expression = TextFieldValue("")

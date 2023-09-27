@@ -197,6 +197,8 @@ data class Log(
 
 data class Game(
     val cardsSupport: Boolean,
+    val playerMoveSys: Boolean,
+    val lap: MutableIntState,
     val players: SnapshotStateList<Player>,
     val historicPlayers: SnapshotStateList<HistoricPlayer>,
     val loans: SnapshotStateList<Loan>,
@@ -211,6 +213,8 @@ data class Game(
 @Serializable
 data class StaticGame(
     val cardsSupport: Boolean,
+    val playerMoveSys: Boolean,
+    val lap: Int,
     val players: List<StaticPlayer>,
     val historicPlayers: List<HistoricPlayer>,
     val startMillis: Long,
@@ -219,6 +223,8 @@ data class StaticGame(
 ) {
     constructor(game: Game) : this(
         game.cardsSupport,
+        game.playerMoveSys,
+        game.lap.intValue,
         game.players.map { StaticPlayer(it) },
         game.historicPlayers,
         game.startMillis,
@@ -408,6 +414,8 @@ class MainActivity : ComponentActivity() {
                                         // Associate player objects with loan player objects so money is synced
                                         currentGame = Game(
                                             staticGame.cardsSupport,
+                                            staticGame.playerMoveSys,
+                                            mutableIntStateOf(staticGame.lap),
                                             players.toMutableStateList(),
                                             staticGame.historicPlayers.toMutableStateList(),
                                             staticGame.loans.map {
@@ -485,7 +493,7 @@ class MainActivity : ComponentActivity() {
                                 ) {
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                         Text(
-                                            text = "Cardopoly - spēle ${if (currentGame?.cardsSupport == true) "ar" else "bez"} kartēm | $timePassed",
+                                            text = "Cardopoly - ${if (currentGame?.playerMoveSys == true) "aplis nr. ${currentGame?.lap?.intValue ?: 0}" else "spēle ${if (currentGame?.cardsSupport == true) "ar" else "bez"} kartēm"} | $timePassed",
                                             modifier = Modifier.padding(vertical = 5.dp),
                                             style = Typography.bodyMedium,
                                             fontSize = 16.sp,

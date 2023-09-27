@@ -67,7 +67,6 @@ fun ScreenSelector(
                                 modifier = Modifier.size(64.dp)
                             )
                             Column(
-                                modifier = Modifier.padding(top = 5.dp),
                                 verticalArrangement = Arrangement.Center,
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {

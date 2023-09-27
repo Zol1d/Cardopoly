@@ -221,7 +221,10 @@ fun GameScreen(navController: NavHostController) {
                         LaunchedEffect(true) {
                             focusRequester.requestFocus()
                         }
-                        val dialogCalc = dialogCalculator(resultPaste = { sum = it },
+                        val dialogCalc = dialogCalculator(resultPaste = {
+                            if (it > 0) {
+                                sum = it
+                            }                                },
                             initialExpr = { sum?.toString() ?: "" })
                         IconButton(
                             onClick = { dialogCalc() },
@@ -523,6 +526,9 @@ fun GameScreen(navController: NavHostController) {
                 }
             }
             Column {
+                Row(Modifier.fillMaxWidth()) {
+
+                }
                 ScreenSelector(
                     rowList = listOf(
                         if (currentGame?.cardsSupport == true) listOf(
@@ -561,7 +567,7 @@ fun GameScreen(navController: NavHostController) {
                 Row(
                     Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 30.dp),
+                        .padding(vertical = 20.dp),
                     horizontalArrangement = Arrangement.Center
                 ) {
                     TextButton(

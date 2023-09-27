@@ -4,9 +4,11 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,6 +22,7 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -28,6 +31,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalMinimumInteractiveComponentEnforcement
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -188,9 +192,8 @@ fun StartGameScreen(navController: NavHostController, cards_enabled: Boolean) {
     }
     Scaffold(topBar = {
         StandardTopAppBar(
-            title = "Spēlētāji",
+            title = if (cards_enabled) "Spēlēt ar kartēm" else "Spēlēt bez kartēm",
             navController = navController,
-            subtitle = if (cards_enabled) "Spēlēt ar kartēm" else "Spēlēt bez kartēm"
         )
     }, snackbarHost = { Snackbar.Host() },
         floatingActionButtonPosition = FabPosition.End,
@@ -207,6 +210,7 @@ fun StartGameScreen(navController: NavHostController, cards_enabled: Boolean) {
                 }
             }
         }) { pv ->
+        var playerMoveSys by remember { mutableStateOf(false) }
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -218,6 +222,26 @@ fun StartGameScreen(navController: NavHostController, cards_enabled: Boolean) {
                     .weight(1f),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                Card(Modifier.padding(bottom = 15.dp)) {
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 5.dp, horizontal = 15.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Gājienu sistēma",
+                            modifier = Modifier.weight(1f),
+                            color = colorScheme.secondary
+                        )
+                        Switch(
+                            checked = playerMoveSys,
+                            onCheckedChange = {
+                                playerMoveSys = it
+                            })
+                    }
+                }
                 AnimatedVisibility(visible = addingPlayers.isEmpty()) {
                     Text(
                         "Nav neviena spēlētāja",
@@ -279,7 +303,15 @@ fun StartGameScreen(navController: NavHostController, cards_enabled: Boolean) {
             ) {
                 Button(
                     onClick = {
-                        currentGame = Game(cards_enabled, addingPlayers, mutableStateListOf(), mutableStateListOf(), mutableListOf())
+                        currentGame = Game(
+                            cards_enabled,
+                            playerMoveSys,
+                            mutableIntStateOf(0),
+                            addingPlayers,
+                            mutableStateListOf(),
+                            mutableStateListOf(),
+                            mutableListOf()
+                        )
                         navController.navigateWithoutTrace("game")
                     },
                     shape = Shapes.largeButton,

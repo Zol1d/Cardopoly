@@ -269,7 +269,7 @@ fun NewLoanScreen(navController: NavHostController) {
                         suffix = { Text(text = MONEY) },
                         modifier = Modifier.focusRequester(focusRequester)
                     )
-                    val dialogCalc = dialogCalculator(resultPaste = { amount = it },
+                    val dialogCalc = dialogCalculator(resultPaste = { if (it > 0) amount = it },
                         initialExpr = { amount?.toString() ?: "" })
                     IconButton(
                         onClick = { dialogCalc() },
@@ -304,7 +304,7 @@ fun NewLoanScreen(navController: NavHostController) {
                         suffix = { Text(text = MONEY) },
                     )
                     val dialogCalc =
-                        dialogCalculator(resultPaste = { amountToPayBack = it },
+                        dialogCalculator(resultPaste = { if (it > 0) amountToPayBack = it },
                             initialExpr = {
                                 amount?.toString() ?: amountToPayBack?.toString() ?: ""
                             })
