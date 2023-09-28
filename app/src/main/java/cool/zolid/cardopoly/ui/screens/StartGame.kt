@@ -305,7 +305,7 @@ fun StartGameScreen(navController: NavHostController, cards_enabled: Boolean) {
                     onClick = {
                         currentGame = Game(
                             cards_enabled,
-                            playerMoveSys,
+                            mutableStateOf(if (playerMoveSys) addingPlayers[0] else null),
                             mutableIntStateOf(0),
                             addingPlayers,
                             mutableStateListOf(),

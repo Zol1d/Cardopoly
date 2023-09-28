@@ -1,7 +1,6 @@
 package cool.zolid.cardopoly.ui.screens
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.spring
@@ -21,7 +20,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -95,7 +97,6 @@ private enum class BankOperation {
 
 @OptIn(
     ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class,
-    ExperimentalAnimationApi::class
 )
 @Composable
 fun GameScreen(navController: NavHostController) {
@@ -127,7 +128,14 @@ fun GameScreen(navController: NavHostController) {
                             player.money.intValue += sum!!
                             Snackbar.showSnackbarMsg("Darījums veiksmīgs")
                             Beep.moneyAdd()
-                            currentGame!!.logs.add(Log(LogType.ADD_MONEY, StaticPlayer(player), null, sum!!))
+                            currentGame!!.logs.add(
+                                Log(
+                                    LogType.ADD_MONEY,
+                                    StaticPlayer(player),
+                                    null,
+                                    sum!!
+                                )
+                            )
                             currentBankOperationDialog = null
                         }
 
@@ -143,7 +151,14 @@ fun GameScreen(navController: NavHostController) {
                                 money.intValue -= sum!!
                                 Snackbar.showSnackbarMsg("Darījums veiksmīgs")
                                 Beep.moneyRemove()
-                                currentGame!!.logs.add(Log(LogType.REMOVE_MONEY, StaticPlayer(player), null, sum!!))
+                                currentGame!!.logs.add(
+                                    Log(
+                                        LogType.REMOVE_MONEY,
+                                        StaticPlayer(player),
+                                        null,
+                                        sum!!
+                                    )
+                                )
                             }
                             currentBankOperationDialog = null
                         }
@@ -166,7 +181,14 @@ fun GameScreen(navController: NavHostController) {
                                     currentGame!!.players.find { it.card == b64id }!!.money.intValue += sum!!
                                     Snackbar.showSnackbarMsg("Darījums veiksmīgs")
                                     Beep.moneyAdd()
-                                    currentGame!!.logs.add(Log(LogType.TRANSFER_MONEY, StaticPlayer(fromPlayer), StaticPlayer(player), sum!!))
+                                    currentGame!!.logs.add(
+                                        Log(
+                                            LogType.TRANSFER_MONEY,
+                                            StaticPlayer(fromPlayer),
+                                            StaticPlayer(player),
+                                            sum!!
+                                        )
+                                    )
                                 }
                                 currentBankOperationDialog = null
                             }
@@ -224,7 +246,8 @@ fun GameScreen(navController: NavHostController) {
                         val dialogCalc = dialogCalculator(resultPaste = {
                             if (it > 0) {
                                 sum = it
-                            }                                },
+                            }
+                        },
                             initialExpr = { sum?.toString() ?: "" })
                         IconButton(
                             onClick = { dialogCalc() },
@@ -313,7 +336,14 @@ fun GameScreen(navController: NavHostController) {
             )
             currentGame!!.players.remove(removePlayerDialog)
             Beep.moneyRemove()
-            currentGame!!.logs.add(Log(LogType.REMOVE_PLAYER, StaticPlayer(removePlayerDialog!!), null, null))
+            currentGame!!.logs.add(
+                Log(
+                    LogType.REMOVE_PLAYER,
+                    StaticPlayer(removePlayerDialog!!),
+                    null,
+                    null
+                )
+            )
             removePlayerDialog = null
         }
         DisposableEffect(true) {
@@ -526,8 +556,31 @@ fun GameScreen(navController: NavHostController) {
                 }
             }
             Column {
-                Row(Modifier.fillMaxWidth()) {
-
+                if (currentGame!!.playerToMove.value != null) {
+                    Row(Modifier.fillMaxWidth()) {
+                        Button(
+                            onClick = {
+                                currentGame!!.lap.intValue -= 1
+                                val currIndex =
+                                    currentGame!!.players.indexOf(currentGame!!.playerToMove.value)
+                                currentGame!!.playerToMove.value =
+                                    currentGame!!.players[if (currIndex == 0) currentGame!!.players.size - 1 else currIndex - 1]
+                            },
+                            modifier = Modifier.weight(0.3f),
+                            enabled = currentGame!!.lap.intValue > 0
+                        ) {
+                            Icon(Icons.Rounded.ArrowBack, contentDescription = null)
+                        }
+                        Button(onClick = {
+                            currentGame!!.lap.intValue += 1
+                            val currIndex =
+                                currentGame!!.players.indexOf(currentGame!!.playerToMove.value)
+                            currentGame!!.playerToMove.value =
+                                currentGame!!.players[if (currIndex == currentGame!!.players.size - 1) 0 else currIndex + 1]
+                        }, modifier = Modifier.weight(0.7f)) {
+                            Icon(Icons.Rounded.ArrowForward, contentDescription = null)
+                        }
+                    }
                 }
                 ScreenSelector(
                     rowList = listOf(
@@ -551,11 +604,11 @@ fun GameScreen(navController: NavHostController) {
                         listOf(
                             ScreenItem("loans", "Aizdevumi", R.drawable.request_quote),
                             if (currentGame?.cardsSupport == true)
-                            ScreenItem(
-                                "logs",
-                                "Darījumi",
-                                R.drawable.history
-                            ) else ScreenItem(
+                                ScreenItem(
+                                    "logs",
+                                    "Darījumi",
+                                    R.drawable.history
+                                ) else ScreenItem(
                                 "bankingcalc",
                                 "Kalkulators",
                                 R.drawable.calculate

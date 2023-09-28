@@ -78,7 +78,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -192,12 +191,12 @@ data class Log(
     val player: StaticPlayer,
     val toPlayer: StaticPlayer?,
     val amount: Int?,
-    val time: Instant = Clock.System.now()
+    val time: kotlinx.datetime.Instant = Clock.System.now()
 )
 
 data class Game(
     val cardsSupport: Boolean,
-    val playerMoveSys: Boolean,
+    val playerToMove: MutableState<Player?>,
     val lap: MutableIntState,
     val players: SnapshotStateList<Player>,
     val historicPlayers: SnapshotStateList<HistoricPlayer>,
@@ -213,7 +212,7 @@ data class Game(
 @Serializable
 data class StaticGame(
     val cardsSupport: Boolean,
-    val playerMoveSys: Boolean,
+    val playerToMove: StaticPlayer?,
     val lap: Int,
     val players: List<StaticPlayer>,
     val historicPlayers: List<HistoricPlayer>,
@@ -223,7 +222,7 @@ data class StaticGame(
 ) {
     constructor(game: Game) : this(
         game.cardsSupport,
-        game.playerMoveSys,
+        if (game.playerToMove.value != null) StaticPlayer(game.playerToMove.value!!) else null,
         game.lap.intValue,
         game.players.map { StaticPlayer(it) },
         game.historicPlayers,
@@ -414,7 +413,7 @@ class MainActivity : ComponentActivity() {
                                         // Associate player objects with loan player objects so money is synced
                                         currentGame = Game(
                                             staticGame.cardsSupport,
-                                            staticGame.playerMoveSys,
+                                            mutableStateOf(if (staticGame.playerToMove != null) players.find { it1 -> it1.money.intValue == staticGame.playerToMove.money && it1.card == staticGame.playerToMove.card && it1.name == staticGame.playerToMove.name } else null),
                                             mutableIntStateOf(staticGame.lap),
                                             players.toMutableStateList(),
                                             staticGame.historicPlayers.toMutableStateList(),
@@ -493,7 +492,7 @@ class MainActivity : ComponentActivity() {
                                 ) {
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                         Text(
-                                            text = "Cardopoly - ${if (currentGame?.playerMoveSys == true) "aplis nr. ${currentGame?.lap?.intValue ?: 0}" else "spēle ${if (currentGame?.cardsSupport == true) "ar" else "bez"} kartēm"} | $timePassed",
+                                            text = "Cardopoly - ${if (currentGame?.playerToMove != null) "aplis nr. ${currentGame?.lap?.intValue ?: 0}" else "spēle ${if (currentGame?.cardsSupport == true) "ar" else "bez"} kartēm"} | $timePassed",
                                             modifier = Modifier.padding(vertical = 5.dp),
                                             style = Typography.bodyMedium,
                                             fontSize = 16.sp,
