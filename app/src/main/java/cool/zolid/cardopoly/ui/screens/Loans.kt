@@ -90,7 +90,8 @@ fun LoansScreen(navController: NavHostController) {
                             TableText(
                                 when (viewDialogOpen!!.terms) {
                                     is LoanTerms.Custom -> "Nosacījumi"
-                                    is LoanTerms.Laps -> "Nosacījumi: Apļi"
+                                    is LoanTerms.Laps -> "Aplis, kurā jāatmaksā"
+                                    is LoanTerms.IRLLaps -> "Nosacījumi: Galda apļi"
                                 }
                             )
                         }
@@ -133,12 +134,40 @@ fun LoansScreen(navController: NavHostController) {
                                 TableValue(viewDialogOpen!!.to.name)
                             }
                             TableValue("${viewDialogOpen!!.amount}$MONEY", colorScheme.tertiary)
-                            TableValue("${viewDialogOpen!!.amountToPayBack}$MONEY", colorScheme.tertiary)
+                            TableValue(
+                                "${viewDialogOpen!!.amountToPayBack}$MONEY",
+                                colorScheme.tertiary
+                            )
                             TableValue(
                                 when (viewDialogOpen!!.terms) {
                                     is LoanTerms.Custom -> (viewDialogOpen!!.terms as LoanTerms.Custom).terms
-                                    is LoanTerms.Laps -> (viewDialogOpen!!.terms as LoanTerms.Laps).laps.toString()
+                                    is LoanTerms.IRLLaps -> (viewDialogOpen!!.terms as LoanTerms.IRLLaps).laps.toString()
+                                    is LoanTerms.Laps -> (viewDialogOpen!!.terms as LoanTerms.Laps).paybackLap.toString()
                                 }
+                            )
+                        }
+                    }
+                    if (viewDialogOpen!!.terms is LoanTerms.Laps) {
+                        if (currentGame!!.lap.intValue < (viewDialogOpen!!.terms as LoanTerms.Laps).paybackLap) {
+                            Text(
+                                "Pēc ${(viewDialogOpen!!.terms as LoanTerms.Laps).paybackLap - currentGame!!.lap.intValue} apļiem parāds ir jāatmaksā!",
+                                style = Typography.bodyLarge,
+                                modifier = Modifier.padding(top = 10.dp),
+                                color = colorScheme.tertiary
+                            )
+                        } else if (currentGame!!.lap.intValue == (viewDialogOpen!!.terms as LoanTerms.Laps).paybackLap) {
+                            Text(
+                                "Parāds ir jāatmaksā šajā aplī!",
+                                style = Typography.bodyLarge,
+                                modifier = Modifier.padding(top = 10.dp),
+                                color = colorScheme.error
+                            )
+                        } else if (currentGame!!.lap.intValue > (viewDialogOpen!!.terms as LoanTerms.Laps).paybackLap) {
+                            Text(
+                                "Parāds tiek kavēts par ${currentGame!!.lap.intValue - (viewDialogOpen!!.terms as LoanTerms.Laps).paybackLap} apļiem!",
+                                style = Typography.bodyLarge,
+                                modifier = Modifier.padding(top = 10.dp),
+                                color = colorScheme.error
                             )
                         }
                     }
@@ -200,7 +229,15 @@ fun LoansScreen(navController: NavHostController) {
                         payDialogOpen!!.from.money.intValue += payDialogOpen!!.amountToPayBack
                         Snackbar.showSnackbarMsg("Darījums veiksmīgs")
                         Beep.moneyAdd()
-                        currentGame!!.logs.add(Log(LogType.PAYBACK_LOAN, StaticPlayer(payDialogOpen!!.to), StaticPlayer(payDialogOpen!!.from), payDialogOpen!!.amountToPayBack))
+                        currentGame!!.logs.add(
+                            Log(
+                                LogType.PAYBACK_LOAN,
+                                StaticPlayer(payDialogOpen!!.to),
+                                StaticPlayer(payDialogOpen!!.from),
+                                payDialogOpen!!.amountToPayBack,
+                                currentGame!!.lap.intValue
+                            )
+                        )
                         payDialogOpen = null
                     } else {
                         Beep.error()
@@ -335,6 +372,27 @@ fun LoansScreen(navController: NavHostController) {
                                             loan.to.name,
                                             style = Typography.bodyMedium,
                                         )
+                                    }
+                                    if (loan.terms is LoanTerms.Laps) {
+                                        if (currentGame!!.lap.intValue < loan.terms.paybackLap) {
+                                            Text(
+                                                "Jāatmaksā pēc ${loan.terms.paybackLap - currentGame!!.lap.intValue} apļiem",
+                                                style = Typography.bodyMedium,
+                                                color = colorScheme.secondary
+                                            )
+                                        } else if (currentGame!!.lap.intValue == loan.terms.paybackLap) {
+                                            Text(
+                                                "Jāatmaksā šajā aplī",
+                                                style = Typography.bodyMedium,
+                                                color = colorScheme.primary
+                                            )
+                                        } else if (currentGame!!.lap.intValue > loan.terms.paybackLap) {
+                                            Text(
+                                                "Kavēts par ${currentGame!!.lap.intValue - loan.terms.paybackLap} apļiem",
+                                                style = Typography.bodyMedium,
+                                                color = colorScheme.error
+                                            )
+                                        }
                                     }
                                 }
                                 Column(horizontalAlignment = Alignment.End) {

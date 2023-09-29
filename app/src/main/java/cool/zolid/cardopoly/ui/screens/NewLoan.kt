@@ -82,8 +82,9 @@ fun NewLoanScreen(navController: NavHostController) {
     var to by remember { mutableStateOf<Player?>(null) }
     var amount by remember { mutableStateOf<Int?>(null) }
     var amountToPayBack by remember { mutableStateOf<Int?>(null) }
-    var terms by remember { mutableIntStateOf(0) }
+    var terms by remember { mutableIntStateOf(1) }
     var customTerms by remember { mutableStateOf<String?>(null) }
+    var irlLapTerms by remember { mutableStateOf<Int?>(null) }
     var lapTerms by remember { mutableStateOf<Int?>(null) }
     var notes by remember { mutableStateOf<String?>(null) }
     var payDialogOpen by remember { mutableStateOf(false) }
@@ -95,7 +96,7 @@ fun NewLoanScreen(navController: NavHostController) {
                 amount,
                 amountToPayBack,
                 terms
-            ).all { it != null } && (if (terms == 0) lapTerms != null else customTerms != null) && (amount!! <= amountToPayBack!!)
+            ).all { it != null } && (if (terms == 0) customTerms != null else if (terms == 1) irlLapTerms != null else lapTerms != null) && (amount!! <= amountToPayBack!!)
         }
     }
 
@@ -111,7 +112,7 @@ fun NewLoanScreen(navController: NavHostController) {
             to!!.money.intValue += amount!!
             Snackbar.showSnackbarMsg("Darījums veiksmīgs")
             Beep.moneyAdd()
-            currentGame!!.logs.add(Log(LogType.CREATE_LOAN, StaticPlayer(from!!), StaticPlayer(to!!), amount!!))
+            currentGame!!.logs.add(Log(LogType.CREATE_LOAN, StaticPlayer(from!!), StaticPlayer(to!!), amount!!, currentGame!!.lap.intValue))
         }
         currentGame!!.loans.add(
             Loan(
@@ -119,9 +120,9 @@ fun NewLoanScreen(navController: NavHostController) {
                 to = to!!,
                 amount = amount!!,
                 amountToPayBack = amountToPayBack!!,
-                terms = if (terms == 0) LoanTerms.Laps(lapTerms!!) else LoanTerms.Custom(
-                    customTerms!!
-                ),
+                terms = if (terms == 0) LoanTerms.Custom(customTerms!!) else if (terms == 1) LoanTerms.IRLLaps(
+                    irlLapTerms!!
+                ) else LoanTerms.Laps(lapTerms!! + currentGame!!.lap.intValue),
                 notes = notes
             )
         )
@@ -216,7 +217,7 @@ fun NewLoanScreen(navController: NavHostController) {
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             SegmentedButtons(
-                itemsList = listOf("Apļi", "Metieni", "Pielāgots"),
+                itemsList = mutableListOf("Pielāgots", "Galda apļi").apply { if (currentGame?.playerToMove?.value != null) add("Apļi") },
                 onSelectedItem = {
                     terms = it
                 },
@@ -340,7 +341,7 @@ fun NewLoanScreen(navController: NavHostController) {
                 )
             }
             when (terms) {
-                2 -> {
+                0 -> {
                     TextField(
                         value = customTerms ?: "",
                         onValueChange = {
@@ -353,7 +354,22 @@ fun NewLoanScreen(navController: NavHostController) {
                     )
                 }
 
-                0 -> {
+                1 -> {
+                    TextField(
+                        value = irlLapTerms?.toString() ?: "",
+                        onValueChange = {
+                            irlLapTerms = it.toIntOrNull().takeIf { it != null && it > 0 }
+                        },
+                        keyboardOptions = KeyboardOptions(
+                            imeAction = ImeAction.Done, keyboardType = KeyboardType.Number
+                        ),
+                        label = { Text(text = "Galda apļi") },
+                        singleLine = true,
+                        modifier = Modifier.width(140.dp).align(Alignment.End).padding(top = 5.dp)
+                    )
+                }
+
+                2 -> {
                     TextField(
                         value = lapTerms?.toString() ?: "",
                         onValueChange = {

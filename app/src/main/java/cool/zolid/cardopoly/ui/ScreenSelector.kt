@@ -64,7 +64,7 @@ fun ScreenSelector(
                             Icon(
                                 painterResource(screenItem.icon),
                                 contentDescription = null,
-                                modifier = Modifier.size(64.dp)
+                                modifier = Modifier.size(56.dp)
                             )
                             Column(
                                 verticalArrangement = Arrangement.Center,

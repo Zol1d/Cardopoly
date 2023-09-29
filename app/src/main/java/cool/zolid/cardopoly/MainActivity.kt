@@ -135,7 +135,10 @@ data class StaticPlayer(val name: String, val card: String?, val money: Int) {
 @Serializable
 sealed class LoanTerms {
     @Serializable
-    data class Laps(val laps: Int) : LoanTerms()
+    data class Laps(val paybackLap: Int) : LoanTerms()
+
+    @Serializable
+    data class IRLLaps(val laps: Int) : LoanTerms()
 
     @Serializable
     data class Custom(val terms: String) : LoanTerms()
@@ -191,6 +194,7 @@ data class Log(
     val player: StaticPlayer,
     val toPlayer: StaticPlayer?,
     val amount: Int?,
+    val lap: Int,
     val time: kotlinx.datetime.Instant = Clock.System.now()
 )
 
@@ -492,7 +496,7 @@ class MainActivity : ComponentActivity() {
                                 ) {
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                         Text(
-                                            text = "Cardopoly - ${if (currentGame?.playerToMove != null) "aplis nr. ${currentGame?.lap?.intValue ?: 0}" else "spēle ${if (currentGame?.cardsSupport == true) "ar" else "bez"} kartēm"} | $timePassed",
+                                            text = "Cardopoly  -  ${if (currentGame?.playerToMove != null) "${currentGame?.lap?.intValue ?: 0}. aplis" else "spēle ${if (currentGame?.cardsSupport == true) "ar" else "bez"} kartēm"} | $timePassed",
                                             modifier = Modifier.padding(vertical = 5.dp),
                                             style = Typography.bodyMedium,
                                             fontSize = 16.sp,

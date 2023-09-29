@@ -82,4 +82,5 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.7.3")
     implementation("org.mariuszgromada.math:MathParser.org-mXparser:5.2.1")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
+    implementation("org.burnoutcrew.composereorderable:reorderable:0.9.6")
 }

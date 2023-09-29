@@ -1,6 +1,7 @@
 package cool.zolid.cardopoly.ui.screens
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.spring
@@ -63,6 +64,7 @@ import androidx.navigation.NavHostController
 import cool.zolid.cardopoly.Beep
 import cool.zolid.cardopoly.HistoricPlayer
 import cool.zolid.cardopoly.Json
+import cool.zolid.cardopoly.LoanTerms
 import cool.zolid.cardopoly.Log
 import cool.zolid.cardopoly.LogType
 import cool.zolid.cardopoly.MONEY
@@ -133,7 +135,8 @@ fun GameScreen(navController: NavHostController) {
                                     LogType.ADD_MONEY,
                                     StaticPlayer(player),
                                     null,
-                                    sum!!
+                                    sum!!,
+                                    currentGame!!.lap.intValue,
                                 )
                             )
                             currentBankOperationDialog = null
@@ -156,7 +159,8 @@ fun GameScreen(navController: NavHostController) {
                                         LogType.REMOVE_MONEY,
                                         StaticPlayer(player),
                                         null,
-                                        sum!!
+                                        sum!!,
+                                        currentGame!!.lap.intValue,
                                     )
                                 )
                             }
@@ -186,7 +190,8 @@ fun GameScreen(navController: NavHostController) {
                                             LogType.TRANSFER_MONEY,
                                             StaticPlayer(fromPlayer),
                                             StaticPlayer(player),
-                                            sum!!
+                                            sum!!,
+                                            currentGame!!.lap.intValue,
                                         )
                                     )
                                 }
@@ -324,6 +329,15 @@ fun GameScreen(navController: NavHostController) {
             exitDialogOpen = true
         }
     }
+    fun nextPlayerToMove() {
+        val currIndex =
+            currentGame!!.players.indexOf(currentGame!!.playerToMove.value)
+        currentGame!!.playerToMove.value =
+            currentGame!!.players[if (currIndex == currentGame!!.players.size - 1) 0 else currIndex + 1]
+        if (currIndex == currentGame!!.players.size - 1) {
+            currentGame!!.lap.intValue += 1
+        }
+    }
     if (removePlayerDialog != null) {
         var confirmed by remember { mutableStateOf(false) }
         fun wipePlayer() {
@@ -334,6 +348,9 @@ fun GameScreen(navController: NavHostController) {
                     removePlayerDialog!!.card
                 )
             )
+            if (currentGame!!.playerToMove.value == removePlayerDialog) {
+                nextPlayerToMove()
+            }
             currentGame!!.players.remove(removePlayerDialog)
             Beep.moneyRemove()
             currentGame!!.logs.add(
@@ -341,7 +358,8 @@ fun GameScreen(navController: NavHostController) {
                     LogType.REMOVE_PLAYER,
                     StaticPlayer(removePlayerDialog!!),
                     null,
-                    null
+                    null,
+                    currentGame!!.lap.intValue
                 )
             )
             removePlayerDialog = null
@@ -446,6 +464,16 @@ fun GameScreen(navController: NavHostController) {
                                     horizontal = 13.dp,
                                     vertical = 7.dp
                                 ),
+                                colors = ButtonDefaults.elevatedButtonColors(
+                                    containerColor = animateColorAsState(
+                                        if (currentGame?.playerToMove?.value == player) colorScheme.tertiaryContainer else colorScheme.surface,
+                                        label = ""
+                                    ).value,
+                                    contentColor = animateColorAsState(
+                                        if (currentGame?.playerToMove?.value == player) colorScheme.primary else colorScheme.primary,
+                                        label = ""
+                                    ).value
+                                ),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(vertical = 3.dp)
@@ -492,11 +520,25 @@ fun GameScreen(navController: NavHostController) {
                                                 style = Typography.bodyLarge
                                             )
                                             if (currentGame?.loans?.any { it.to == player } == true) {
-                                                Text(
-                                                    "${currentGame?.loans?.count { it.to == player }} ${if (currentGame?.loans?.count { it.to == player } == 1) "aktīvs parāds" else "aktīvi parādi"}",
-                                                    style = Typography.bodyMedium,
-                                                    color = colorScheme.secondary
-                                                )
+                                                if (currentGame?.loans?.any { it.to == player && it.terms is LoanTerms.Laps && it.terms.paybackLap == currentGame!!.lap.intValue } == true) {
+                                                    Text(
+                                                        "Parāds jāatmaksā šajā aplī",
+                                                        style = Typography.bodyMedium,
+                                                        color = colorScheme.primary
+                                                    )
+                                                } else if (currentGame?.loans?.any { it.to == player && it.terms is LoanTerms.Laps && it.terms.paybackLap < currentGame!!.lap.intValue } == true) {
+                                                    Text(
+                                                        "Kavēts parāds",
+                                                        style = Typography.bodyMedium,
+                                                        color = colorScheme.error
+                                                    )
+                                                } else {
+                                                    Text(
+                                                        "${currentGame?.loans?.count { it.to == player }} ${if (currentGame?.loans?.count { it.to == player } == 1) "aktīvs parāds" else "aktīvi parādi"}",
+                                                        style = Typography.bodyMedium,
+                                                        color = colorScheme.secondary
+                                                    )
+                                                }
                                             }
                                         }
                                     }
@@ -520,7 +562,7 @@ fun GameScreen(navController: NavHostController) {
                                 ),
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(vertical = 3.dp)
+                                    .padding(vertical = 3.dp),
                             ) {
                                 Box(Modifier.fillMaxWidth()) {
                                     if (currentGame?.cardsSupport == false) {
@@ -556,29 +598,45 @@ fun GameScreen(navController: NavHostController) {
                 }
             }
             Column {
-                if (currentGame!!.playerToMove.value != null) {
-                    Row(Modifier.fillMaxWidth()) {
+                if (currentGame?.playerToMove?.value != null) {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
                         Button(
                             onClick = {
-                                currentGame!!.lap.intValue -= 1
                                 val currIndex =
                                     currentGame!!.players.indexOf(currentGame!!.playerToMove.value)
                                 currentGame!!.playerToMove.value =
                                     currentGame!!.players[if (currIndex == 0) currentGame!!.players.size - 1 else currIndex - 1]
+                                if (currIndex == 0) {
+                                    currentGame!!.lap.intValue -= 1
+                                }
                             },
-                            modifier = Modifier.weight(0.3f),
-                            enabled = currentGame!!.lap.intValue > 0
+                            modifier = Modifier.weight(0.48f),
+                            shape = Shapes.largeButton,
+                            enabled = !(currentGame!!.lap.intValue <= 1 && currentGame!!.players.indexOf(
+                                currentGame!!.playerToMove.value
+                            ) == 0)
                         ) {
-                            Icon(Icons.Rounded.ArrowBack, contentDescription = null)
+                            Icon(
+                                Icons.Rounded.ArrowBack,
+                                contentDescription = null,
+                                modifier = Modifier.size(30.dp)
+                            )
                         }
-                        Button(onClick = {
-                            currentGame!!.lap.intValue += 1
-                            val currIndex =
-                                currentGame!!.players.indexOf(currentGame!!.playerToMove.value)
-                            currentGame!!.playerToMove.value =
-                                currentGame!!.players[if (currIndex == currentGame!!.players.size - 1) 0 else currIndex + 1]
-                        }, modifier = Modifier.weight(0.7f)) {
-                            Icon(Icons.Rounded.ArrowForward, contentDescription = null)
+                        Button(
+                            onClick = ::nextPlayerToMove,
+                            modifier = Modifier.weight(1f),
+                            shape = Shapes.largeButton,
+                        ) {
+                            Icon(
+                                Icons.Rounded.ArrowForward,
+                                contentDescription = null,
+                                modifier = Modifier.size(30.dp)
+                            )
                         }
                     }
                 }
