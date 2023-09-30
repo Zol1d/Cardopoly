@@ -517,26 +517,30 @@ fun GameScreen(navController: NavHostController) {
                                         Column {
                                             Text(
                                                 player.name,
-                                                style = Typography.bodyLarge
+                                                style = Typography.bodyLarge,
+                                                textAlign = if (currentGame?.cardsSupport == true) TextAlign.Start else TextAlign.Center
                                             )
                                             if (currentGame?.loans?.any { it.to == player } == true) {
                                                 if (currentGame?.loans?.any { it.to == player && it.terms is LoanTerms.Laps && it.terms.paybackLap == currentGame!!.lap.intValue } == true) {
                                                     Text(
                                                         "Parāds jāatmaksā šajā aplī",
                                                         style = Typography.bodyMedium,
-                                                        color = colorScheme.primary
+                                                        color = colorScheme.primary,
+                                                        textAlign = if (currentGame?.cardsSupport == true) TextAlign.Start else TextAlign.Center
                                                     )
                                                 } else if (currentGame?.loans?.any { it.to == player && it.terms is LoanTerms.Laps && it.terms.paybackLap < currentGame!!.lap.intValue } == true) {
                                                     Text(
                                                         "Kavēts parāds",
                                                         style = Typography.bodyMedium,
-                                                        color = colorScheme.error
+                                                        color = colorScheme.error,
+                                                        textAlign = if (currentGame?.cardsSupport == true) TextAlign.Start else TextAlign.Center
                                                     )
                                                 } else {
                                                     Text(
                                                         "${currentGame?.loans?.count { it.to == player }} ${if (currentGame?.loans?.count { it.to == player } == 1) "aktīvs parāds" else "aktīvi parādi"}",
                                                         style = Typography.bodyMedium,
-                                                        color = colorScheme.secondary
+                                                        color = colorScheme.secondary,
+                                                        textAlign = if (currentGame?.cardsSupport == true) TextAlign.Start else TextAlign.Center
                                                     )
                                                 }
                                             }
@@ -672,7 +676,10 @@ fun GameScreen(navController: NavHostController) {
                                 R.drawable.calculate
                             )
                         )
-                    ), navController = navController, modifier = Modifier
+                    ),
+                    navController = navController,
+                    compact = currentGame?.cardsSupport == true,
+                    modifier = Modifier
                         .fillMaxWidth()
                 )
                 Row(

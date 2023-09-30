@@ -33,7 +33,10 @@ data class ScreenItem(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScreenSelector(
-    rowList: List<List<ScreenItem>>, navController: NavController, modifier: Modifier = Modifier
+    rowList: List<List<ScreenItem>>,
+    navController: NavController,
+    modifier: Modifier = Modifier,
+    compact: Boolean = false,
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically),
@@ -64,9 +67,10 @@ fun ScreenSelector(
                             Icon(
                                 painterResource(screenItem.icon),
                                 contentDescription = null,
-                                modifier = Modifier.size(56.dp)
+                                modifier = Modifier.size(if (compact) 56.dp else 62.dp)
                             )
                             Column(
+                                if (!compact) Modifier.padding(top = 5.dp) else Modifier,
                                 verticalArrangement = Arrangement.Center,
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {

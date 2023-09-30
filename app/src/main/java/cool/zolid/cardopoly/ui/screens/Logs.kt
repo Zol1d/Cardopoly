@@ -128,8 +128,8 @@ fun LogsScreen(navController: NavHostController) {
                                 .toJavaLocalDateTime().format(DateTimeFormatter.ofPattern("HH:mm"))
                         }${if (currentGame?.playerToMove?.value != null) " | ${log.lap}. aplis" else ""} | ${
                             when (log.type) {
-                                LogType.ADD_MONEY -> "Pieskaitījums no bankas"
-                                LogType.REMOVE_MONEY -> "Atskaitījums uz banku"
+                                LogType.ADD_MONEY -> "Pieskaitījums no valsts kases"
+                                LogType.REMOVE_MONEY -> "Atskaitījums uz valsts kasi"
                                 LogType.TRANSFER_MONEY -> "Pārskaitījums starp spēlētājiem"
                                 LogType.REMOVE_PLAYER -> "Spēlētājs pametis spēli"
                                 LogType.CREATE_LOAN -> "Izsniegts aizdevums"
