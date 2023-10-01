@@ -441,12 +441,12 @@ fun GameScreen(navController: NavHostController) {
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                LazyColumn(userScrollEnabled = true) {
-                    itemsIndexed(currentGame?.players?.sortedByDescending { it.money.intValue }
-                        ?: listOf()) { _, player ->
-                        CompositionLocalProvider(
-                            LocalMinimumInteractiveComponentEnforcement provides false
-                        ) {
+                CompositionLocalProvider(
+                    LocalMinimumInteractiveComponentEnforcement provides false
+                ) {
+                    LazyColumn(userScrollEnabled = true) {
+                        itemsIndexed(currentGame?.players?.sortedByDescending { it.money.intValue }
+                            ?: listOf()) { _, player ->
                             ElevatedButton(
                                 onClick = {
                                     if (currentGame!!.players.size > 2) {
@@ -549,13 +549,7 @@ fun GameScreen(navController: NavHostController) {
                                 }
                             }
                         }
-                    }
-                }
-                LazyColumn(userScrollEnabled = true) {
-                    itemsIndexed(currentGame?.historicPlayers ?: listOf()) { _, player ->
-                        CompositionLocalProvider(
-                            LocalMinimumInteractiveComponentEnforcement provides false
-                        ) {
+                        itemsIndexed(currentGame?.historicPlayers ?: listOf()) { _, player ->
                             ElevatedButton(
                                 onClick = {},
                                 enabled = false,
