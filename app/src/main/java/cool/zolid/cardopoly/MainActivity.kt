@@ -496,7 +496,7 @@ class MainActivity : ComponentActivity() {
                                 ) {
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                         Text(
-                                            text = "Cardopoly  -  ${if (currentGame?.playerToMove != null) "${currentGame?.lap?.intValue ?: 0}. aplis" else "spēle ${if (currentGame?.cardsSupport == true) "ar" else "bez"} kartēm"} | $timePassed",
+                                            text = "Cardopoly  -  ${if (currentGame?.playerToMove?.value != null) "${currentGame?.lap?.intValue ?: 0}. aplis" else "spēle ${if (currentGame?.cardsSupport == true) "ar" else "bez"} kartēm"} | $timePassed",
                                             modifier = Modifier.padding(vertical = 5.dp),
                                             style = Typography.bodyMedium,
                                             fontSize = 16.sp,

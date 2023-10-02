@@ -24,7 +24,7 @@ import cool.zolid.cardopoly.ui.theme.Typography
 
 data class ScreenItem(
     val route: String?,
-    val label: String,
+    val label: String?,
     @DrawableRes val icon: Int,
     val enabled: Boolean = true,
     val onClick: () -> Unit = {},
@@ -69,20 +69,22 @@ fun ScreenSelector(
                                 contentDescription = null,
                                 modifier = Modifier.size(if (compact) 56.dp else 62.dp)
                             )
-                            Column(
-                                if (!compact) Modifier.padding(top = 5.dp) else Modifier,
-                                verticalArrangement = Arrangement.Center,
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Text(
-                                    screenItem.label, style = Typography.bodyLarge
-                                )
-                                if (screenItem.route == "startgame?cards_enabled=true" && NFCCardColorBindings.size < 2) {
+                            if (screenItem.label != null) {
+                                Column(
+                                    if (!compact) Modifier.padding(top = 5.dp) else Modifier,
+                                    verticalArrangement = Arrangement.Center,
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
                                     Text(
-                                        "Vajag vismaz 2 reģistrētas kartes, lai spēlētu",
-                                        style = Typography.bodyMedium,
-                                        color = colorScheme.error
+                                        screenItem.label, style = Typography.bodyLarge
                                     )
+                                    if (screenItem.route == "startgame?cards_enabled=true" && NFCCardColorBindings.size < 2) {
+                                        Text(
+                                            "Vajag vismaz 2 reģistrētas kartes, lai spēlētu",
+                                            style = Typography.bodyMedium,
+                                            color = colorScheme.error
+                                        )
+                                    }
                                 }
                             }
                         }
