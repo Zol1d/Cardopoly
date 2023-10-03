@@ -8,17 +8,24 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.os.Bundle
 import android.provider.Settings
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -26,8 +33,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalMinimumInteractiveComponentEnforcement
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableIntState
@@ -46,12 +55,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.navigation.NavController
@@ -61,6 +74,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import cool.zolid.cardopoly.ui.AlertDialog
+import cool.zolid.cardopoly.ui.SegmentedButtons
 import cool.zolid.cardopoly.ui.screens.BankingCalcScreen
 import cool.zolid.cardopoly.ui.screens.CardsScreen
 import cool.zolid.cardopoly.ui.screens.GameScreen
@@ -117,6 +131,7 @@ class ColorSerializer : KSerializer<Color> {
 
 val Context.nfcCardBindingDataStore: DataStore<Preferences> by preferencesDataStore(name = "cards")
 val Context.gameRecoveryDataStore: DataStore<Preferences> by preferencesDataStore(name = "gamerecovery")
+val Context.settingsDataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
 data class Player(val name: String, val card: String?, val money: MutableIntState) {
     override fun toString(): String = name
@@ -289,6 +304,29 @@ object Beep {
     }
 }
 
+data class GlobalSettings(
+    val keepScreenOn: Boolean,
+    val startingCash: Int,
+    val darkmode: MutableIntState,
+    val sortPlayersByMoney: MutableState<Boolean>,
+    val optionalTradeMoneyTaxPercent: MutableIntState,
+    val optionalTradeRealestateTaxPercent: MutableIntState,
+    val realestateTaxPercent: MutableIntState
+)
+
+var globalSettings by mutableStateOf(
+    GlobalSettings(
+        keepScreenOn = true,
+        startingCash = 1500,
+        darkmode = mutableIntStateOf(0),
+        sortPlayersByMoney = mutableStateOf(true),
+        optionalTradeMoneyTaxPercent = mutableIntStateOf(10),
+        optionalTradeRealestateTaxPercent = mutableIntStateOf(10),
+        realestateTaxPercent = mutableIntStateOf(8)
+    )
+)
+var globalSettingsDialogOpen by mutableStateOf(false)
+
 class MainActivity : ComponentActivity() {
     @Suppress("UnnecessaryOptInAnnotation")
     @OptIn(ExperimentalEncodingApi::class)
@@ -343,21 +381,161 @@ class MainActivity : ComponentActivity() {
         License.iConfirmNonCommercialUse("Zolid")
         var gameRecoveryDialogOpen by mutableStateOf(false)
         CoroutineScope(Dispatchers.IO).launch {
+            val settings = settingsDataStore.data.first()
+            globalSettings = GlobalSettings(
+                keepScreenOn = settings[booleanPreferencesKey("keepScreenOn")]
+                    ?: globalSettings.keepScreenOn,
+                startingCash = settings[intPreferencesKey("startingCash")]
+                    ?: globalSettings.startingCash,
+                darkmode = settings[intPreferencesKey("darkmode")].let {
+                    if (it != null) mutableIntStateOf(
+                        it
+                    ) else null
+                } ?: globalSettings.darkmode,
+                sortPlayersByMoney = settings[booleanPreferencesKey("sortPlayersByMoney")].let {
+                    if (it != null) mutableStateOf(
+                        it
+                    ) else null
+                } ?: globalSettings.sortPlayersByMoney,
+                optionalTradeMoneyTaxPercent = settings[intPreferencesKey("optionalTradeMoneyTaxPercent")].let {
+                    if (it != null) mutableIntStateOf(
+                        it
+                    ) else null
+                } ?: globalSettings.optionalTradeMoneyTaxPercent,
+                optionalTradeRealestateTaxPercent = settings[intPreferencesKey("optionalTradeRealestateTaxPercent")].let {
+                    if (it != null) mutableIntStateOf(
+                        it
+                    ) else null
+                } ?: globalSettings.optionalTradeRealestateTaxPercent,
+                realestateTaxPercent = settings[intPreferencesKey("realestateTaxPercent")].let {
+                    if (it != null) mutableIntStateOf(
+                        it
+                    ) else null
+                } ?: globalSettings.realestateTaxPercent,
+            )
             gameRecoveryDialogOpen =
                 gameRecoveryDataStore.data.first().contains(stringPreferencesKey("savedgame"))
             NFCCardColorBindings = Json.decodeFromString(
                 nfcCardBindingDataStore.data.first()[stringPreferencesKey("cards")] ?: return@launch
             )
+            if (globalSettings.keepScreenOn) {
+                window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            }
         }
         setContent {
-            AppTheme {
+            AppTheme(useDarkTheme = if (globalSettings.darkmode.intValue == 0) isSystemInDarkTheme() else globalSettings.darkmode.intValue == 1) {
                 val navController = rememberNavController()
+                val coroutineScope = rememberCoroutineScope()
+                if (globalSettingsDialogOpen) {
+                    AlertDialog(
+                        onDismissRequest = { globalSettingsDialogOpen = false },
+                        title = { Text("Iestatījumi") },
+                        text = {
+                            Column(Modifier.fillMaxWidth()) {
+                                Row(
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "Kārtot spēlētājus pēc naudas",
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    Switch(
+                                        checked = globalSettings.sortPlayersByMoney.value,
+                                        onCheckedChange = { switchState ->
+                                            globalSettings.sortPlayersByMoney.value = switchState
+                                            coroutineScope.launch {
+                                                settingsDataStore.edit { prefs ->
+                                                    prefs[booleanPreferencesKey("sortPlayersByMoney")] =
+                                                        switchState
+                                                }
+                                            }
+                                        })
+                                }
+                                var sCashTempValue by remember { mutableStateOf(globalSettings.startingCash.toString()) }
+                                TextField(
+                                    value = sCashTempValue,
+                                    onValueChange = {
+                                        if (it.toIntOrNull() != null && it.toInt() > -1) {
+                                            globalSettings =
+                                                globalSettings.copy(startingCash = it.toInt())
+                                            coroutineScope.launch {
+                                                settingsDataStore.edit { prefs ->
+                                                    prefs[intPreferencesKey("startingCash")] =
+                                                        it.toInt()
+                                                }
+                                            }
+                                        }
+                                        sCashTempValue = it
+                                    },
+                                    keyboardOptions = KeyboardOptions(
+                                        imeAction = ImeAction.Done,
+                                        keyboardType = KeyboardType.Number
+                                    ),
+                                    label = { Text(text = "Sākotnejā naudas summa") },
+                                    singleLine = true,
+                                    suffix = { Text(text = MONEY) },
+                                    modifier = Modifier.padding(top = 5.dp)
+                                )
+                                Spacer(modifier = Modifier.height(30.dp))
+                                SegmentedButtons(
+                                    itemsList = mutableListOf("Sistēma", "Tumšs", "Gaišs"),
+                                    onSelectedItem = {
+                                        globalSettings.darkmode.intValue = it
+                                        coroutineScope.launch {
+                                            settingsDataStore.edit { prefs ->
+                                                prefs[intPreferencesKey("darkmode")] = it
+                                            }
+                                        }
+                                    },
+                                    initialSelectionIndex = globalSettings.darkmode.intValue,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 5.dp)
+                                )
+                                Row(
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "Turēt ekrānu ieslēgtu",
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    Switch(
+                                        checked = globalSettings.keepScreenOn,
+                                        onCheckedChange = { switchState ->
+                                            globalSettings =
+                                                globalSettings.copy(keepScreenOn = switchState)
+                                            if (switchState) {
+                                                window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                                            } else {
+                                                window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                                            }
+                                            coroutineScope.launch {
+                                                settingsDataStore.edit { prefs ->
+                                                    prefs[booleanPreferencesKey("keepScreenOn")] =
+                                                        switchState
+                                                }
+                                            }
+                                        })
+                                }
+                            }
+                        },
+                        confirmButton = {
+                            TextButton(onClick = { globalSettingsDialogOpen = false }) {
+                                Text("Labi".uppercase())
+                            }
+                        }
+                    )
+                }
                 if (nfcNotAvialableDialogOpen.value != null) {
                     AlertDialog(
                         onDismissRequest = { nfcNotAvialableDialogOpen.value = null },
                         title = {
                             Text(
-                                nfcNotAvialableDialogOpen.value?.first ?: "", fontSize = 20.sp
+                                nfcNotAvialableDialogOpen.value?.first ?: ""
                             )
                         },
                         text = { Text(nfcNotAvialableDialogOpen.value?.second ?: "") },
@@ -390,7 +568,7 @@ class MainActivity : ComponentActivity() {
                     val cs = rememberCoroutineScope()
                     AlertDialog(
                         onDismissRequest = { },
-                        title = { Text("Spēles atkopšana", fontSize = 20.sp) },
+                        title = { Text("Spēles atkopšana") },
                         text = { Text("Krātuvē tika atrasti nepabeigtas spēles dati, vai vēlaties šo spēli turpināt?") },
                         icon = {
                             Icon(

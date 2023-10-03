@@ -267,7 +267,7 @@ fun StartGameScreen(navController: NavHostController, cards_enabled: Boolean) {
                     LazyColumn(
                         userScrollEnabled = true,
                         state = listState.listState,
-                        modifier = Modifier.reorderable(listState)
+                        modifier = Modifier.reorderable(listState).weight(1f)
                     ) {
                         items(items = addingPlayers, key = { it.name }) { player ->
                             ReorderableItem(

@@ -21,6 +21,7 @@ import cool.zolid.cardopoly.BuildConfig
 import cool.zolid.cardopoly.NFCCardColorBindings
 import cool.zolid.cardopoly.NFCEnabled
 import cool.zolid.cardopoly.R
+import cool.zolid.cardopoly.globalSettingsDialogOpen
 import cool.zolid.cardopoly.ui.ScreenItem
 import cool.zolid.cardopoly.ui.ScreenSelector
 import cool.zolid.cardopoly.ui.Snackbar
@@ -67,10 +68,10 @@ fun HomeScreen(navController: NavHostController) {
                             )
                         ),
                         listOf(ScreenItem("cards", "Kartes", R.drawable.cards, NFCEnabled)),
-//                        listOf(ScreenItem(null, "Iestatījumi", R.drawable.settings, onClick = {}))
+                        listOf(ScreenItem(null, "Iestatījumi", R.drawable.settings, onClick = { globalSettingsDialogOpen = true }))
                     ),
                     navController = navController,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
                 )
             }
             Column(

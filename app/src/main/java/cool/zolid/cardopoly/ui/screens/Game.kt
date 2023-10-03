@@ -76,6 +76,8 @@ import cool.zolid.cardopoly.StaticGame
 import cool.zolid.cardopoly.StaticPlayer
 import cool.zolid.cardopoly.currentGame
 import cool.zolid.cardopoly.gameRecoveryDataStore
+import cool.zolid.cardopoly.globalSettings
+import cool.zolid.cardopoly.globalSettingsDialogOpen
 import cool.zolid.cardopoly.navigateWithoutTrace
 import cool.zolid.cardopoly.nfcApiSubscribers
 import cool.zolid.cardopoly.ui.AlertDialog
@@ -446,7 +448,9 @@ fun GameScreen(navController: NavHostController) {
                     LocalMinimumInteractiveComponentEnforcement provides false
                 ) {
                     LazyColumn(userScrollEnabled = true) {
-                        itemsIndexed(currentGame?.players?.sortedByDescending { it.money.intValue }
+                        itemsIndexed(currentGame?.players?.run {
+                            if (globalSettings.sortPlayersByMoney.value) sortedByDescending { it.money.intValue } else this
+                        }
                             ?: listOf()) { _, player ->
                             ElevatedButton(
                                 onClick = {
@@ -681,7 +685,6 @@ fun GameScreen(navController: NavHostController) {
                         ) else listOf(),
                     ),
                     navController = navController,
-                    compact = true,
                     modifier = Modifier
                         .fillMaxWidth()
                 )
@@ -757,7 +760,7 @@ fun GameScreen(navController: NavHostController) {
                         )
                     }
                     TextButton(
-                        onClick = { },
+                        onClick = { globalSettingsDialogOpen = true },
                         colors = ButtonDefaults.textButtonColors(
                             containerColor = colorScheme.surfaceVariant,
                             contentColor = colorScheme.onSurfaceVariant

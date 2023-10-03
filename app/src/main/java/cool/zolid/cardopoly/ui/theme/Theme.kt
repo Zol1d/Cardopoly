@@ -1,14 +1,9 @@
 package cool.zolid.cardopoly.ui.theme
 
-import android.app.Activity
-import android.view.WindowManager
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.platform.LocalView
 
 private val LightColors = lightColorScheme(
     primary = md_theme_light_primary,
@@ -75,7 +70,7 @@ private val DarkColors = darkColorScheme(
 
 @Composable
 fun AppTheme(
-    useDarkTheme: Boolean = isSystemInDarkTheme(),
+    useDarkTheme: Boolean,
     content: @Composable () -> Unit
 ) {
     val colors = if (!useDarkTheme) {
@@ -83,11 +78,6 @@ fun AppTheme(
     } else {
         DarkColors
     }
-    val view = LocalView.current
-    LaunchedEffect(key1 = true) {
-        (view.context as Activity).window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-    }
-
     MaterialTheme(
         colorScheme = colors,
         content = content
