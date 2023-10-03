@@ -3,22 +3,24 @@ package cool.zolid.cardopoly.ui.screens
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -112,7 +114,15 @@ fun NewLoanScreen(navController: NavHostController) {
             to!!.money.intValue += amount!!
             Snackbar.showSnackbarMsg("Darījums veiksmīgs")
             Beep.moneyAdd()
-            currentGame!!.logs.add(Log(LogType.CREATE_LOAN, StaticPlayer(from!!), StaticPlayer(to!!), amount!!, currentGame!!.lap.intValue))
+            currentGame!!.logs.add(
+                Log(
+                    LogType.CREATE_LOAN,
+                    StaticPlayer(from!!),
+                    StaticPlayer(to!!),
+                    amount!!,
+                    currentGame!!.lap.intValue
+                )
+            )
         }
         currentGame!!.loans.add(
             Loan(
@@ -217,7 +227,10 @@ fun NewLoanScreen(navController: NavHostController) {
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             SegmentedButtons(
-                itemsList = mutableListOf("Pielāgots", "Galda apļi").apply { if (currentGame?.playerToMove?.value != null) add("Apļi") },
+                itemsList = mutableListOf(
+                    "Pielāgots",
+                    "Galda apļi"
+                ).apply { if (currentGame?.playerToMove?.value != null) add("Apļi") },
                 onSelectedItem = {
                     terms = it
                 },
@@ -228,12 +241,17 @@ fun NewLoanScreen(navController: NavHostController) {
             )
             if (currentGame?.cardsSupport != true) {
                 ExposedDropDownMenu(
-                    items = currentGame!!.players, selectedItem = from, onSelectedItem = {
+                    items = currentGame!!.players,
+                    selectedItem = from,
+                    onSelectedItem = {
                         if (it == to) {
                             to = from
                         }
                         from = it
-                    }, label = "Devējs", nullReplacement = "Izvēlieties devēju", modifier = Modifier.align(Alignment.CenterHorizontally)
+                    },
+                    label = "Devējs",
+                    nullReplacement = "Izvēlieties devēju",
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
                 Icon(
                     Icons.Rounded.ArrowBack,
@@ -244,12 +262,19 @@ fun NewLoanScreen(navController: NavHostController) {
                         .align(Alignment.CenterHorizontally)
                 )
                 ExposedDropDownMenu(
-                    items = currentGame!!.players, selectedItem = to, onSelectedItem = {
+                    items = currentGame!!.players,
+                    selectedItem = to,
+                    onSelectedItem = {
                         if (it == from) {
                             from = to
                         }
                         to = it
-                    }, label = "Saņēmējs", nullReplacement = "Izvēlieties saņēmēju", modifier = Modifier.align(Alignment.CenterHorizontally).padding(bottom = 20.dp)
+                    },
+                    label = "Saņēmējs",
+                    nullReplacement = "Izvēlieties saņēmēju",
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(bottom = 20.dp)
                 )
             }
             Row(
@@ -272,17 +297,27 @@ fun NewLoanScreen(navController: NavHostController) {
                     )
                     val dialogCalc = dialogCalculator(resultPaste = { if (it > 0) amount = it },
                         initialExpr = { amount?.toString() ?: "" })
-                    IconButton(
+                    Button(
                         onClick = { dialogCalc() },
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 5.dp),
-                        colors = IconButtonDefaults.iconButtonColors(
+                            .fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
                             containerColor = colorScheme.secondary,
                             contentColor = colorScheme.onSecondary
                         ),
+                        shape = RoundedCornerShape(
+                            topStart = 0.dp,
+                            topEnd = 0.dp,
+                            bottomStart = 4.dp,
+                            bottomEnd = 4.dp
+                        ),
+                        contentPadding = PaddingValues(vertical = 2.dp, horizontal = 10.dp)
                     ) {
-                        Icon(painterResource(id = R.drawable.calculate), null)
+                        Icon(
+                            painterResource(id = R.drawable.calculate),
+                            null,
+                            modifier = Modifier.size(40.dp)
+                        )
                     }
                 }
                 LaunchedEffect(true) {
@@ -309,17 +344,27 @@ fun NewLoanScreen(navController: NavHostController) {
                             initialExpr = {
                                 amount?.toString() ?: amountToPayBack?.toString() ?: ""
                             })
-                    IconButton(
+                    Button(
                         onClick = { dialogCalc() },
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 5.dp),
-                        colors = IconButtonDefaults.iconButtonColors(
+                            .fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
                             containerColor = colorScheme.secondary,
                             contentColor = colorScheme.onSecondary
                         ),
+                        shape = RoundedCornerShape(
+                            topStart = 0.dp,
+                            topEnd = 0.dp,
+                            bottomStart = 4.dp,
+                            bottomEnd = 4.dp
+                        ),
+                        contentPadding = PaddingValues(vertical = 2.dp, horizontal = 10.dp)
                     ) {
-                        Icon(painterResource(id = R.drawable.calculate), null)
+                        Icon(
+                            painterResource(id = R.drawable.calculate),
+                            null,
+                            modifier = Modifier.size(40.dp)
+                        )
                     }
                 }
             }
@@ -350,7 +395,9 @@ fun NewLoanScreen(navController: NavHostController) {
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                         label = { Text(text = "Nosacījumi") },
                         singleLine = false,
-                        modifier = Modifier.fillMaxWidth().padding(top = 5.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 5.dp)
                     )
                 }
 
@@ -365,7 +412,10 @@ fun NewLoanScreen(navController: NavHostController) {
                         ),
                         label = { Text(text = "Galda apļi") },
                         singleLine = true,
-                        modifier = Modifier.width(140.dp).align(Alignment.End).padding(top = 5.dp)
+                        modifier = Modifier
+                            .width(140.dp)
+                            .align(Alignment.End)
+                            .padding(top = 5.dp)
                     )
                 }
 
@@ -380,7 +430,10 @@ fun NewLoanScreen(navController: NavHostController) {
                         ),
                         label = { Text(text = "Apļi") },
                         singleLine = true,
-                        modifier = Modifier.width(140.dp).align(Alignment.End).padding(top = 5.dp)
+                        modifier = Modifier
+                            .width(140.dp)
+                            .align(Alignment.End)
+                            .padding(top = 5.dp)
                     )
                 }
             }
