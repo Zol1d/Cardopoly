@@ -68,6 +68,7 @@ import cool.zolid.cardopoly.NFCCardColorBindings
 import cool.zolid.cardopoly.Player
 import cool.zolid.cardopoly.R
 import cool.zolid.cardopoly.currentGame
+import cool.zolid.cardopoly.globalSettings
 import cool.zolid.cardopoly.navigateWithoutTrace
 import cool.zolid.cardopoly.nfcApiSubscribers
 import cool.zolid.cardopoly.ui.AlertDialog
@@ -220,6 +221,7 @@ fun StartGameScreen(navController: NavHostController, cards_enabled: Boolean) {
             }
         }) { pv ->
         var playerMoveSys by remember { mutableStateOf(false) }
+        var optionalTradeTax by remember { mutableStateOf(false) }
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -232,23 +234,38 @@ fun StartGameScreen(navController: NavHostController, cards_enabled: Boolean) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Card(Modifier.padding(bottom = 15.dp)) {
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 5.dp, horizontal = 15.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Gājienu sistēma",
-                            modifier = Modifier.weight(1f),
-                            color = colorScheme.secondary
-                        )
-                        Switch(
-                            checked = playerMoveSys,
-                            onCheckedChange = {
-                                playerMoveSys = it
-                            })
+                    Column(Modifier.padding(vertical = 5.dp, horizontal = 15.dp).fillMaxWidth()) {
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Gājienu sistēma",
+                                modifier = Modifier.weight(1f),
+                                color = colorScheme.secondary
+                            )
+                            Switch(
+                                checked = playerMoveSys,
+                                onCheckedChange = {
+                                    playerMoveSys = it
+                                })
+                        }
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Neoblig. apmaiņas komisijas",
+                                modifier = Modifier.weight(1f),
+                                color = colorScheme.secondary
+                            )
+                            Switch(
+                                checked = optionalTradeTax,
+                                enabled = globalSettings.optionalTradeMoneyTaxPercent.intValue != 0 && globalSettings.optionalTradeRealestateTaxPercent.intValue != 0,
+                                onCheckedChange = {
+                                    optionalTradeTax = it
+                                })
+                        }
                     }
                 }
                 AnimatedVisibility(visible = addingPlayers.isEmpty()) {
@@ -354,6 +371,7 @@ fun StartGameScreen(navController: NavHostController, cards_enabled: Boolean) {
                     onClick = {
                         currentGame = Game(
                             cards_enabled,
+                            optionalTradeTax,
                             mutableStateOf(if (playerMoveSys) addingPlayers[0] else null),
                             mutableIntStateOf(1),
                             addingPlayers,

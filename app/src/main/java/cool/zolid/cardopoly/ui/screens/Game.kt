@@ -1,6 +1,7 @@
 package cool.zolid.cardopoly.ui.screens
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateIntAsState
@@ -25,7 +26,9 @@ import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -93,6 +96,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
+import kotlin.math.roundToInt
 
 private enum class BankOperation {
     ADD,
@@ -123,6 +127,7 @@ fun GameScreen(navController: NavHostController) {
     if (currentBankOperationDialog != null) {
         var sum by remember { mutableStateOf<Int?>(null) }
         var sumLockedIn by remember { mutableStateOf(false) }
+        var realEstateTradeTax by remember { mutableStateOf(false) }
         var cardTrasferFromUid by remember { mutableStateOf<String?>(null) }
         DisposableEffect(true) {
             fun processNFC(b64id: String) {
@@ -227,41 +232,101 @@ fun GameScreen(navController: NavHostController) {
             },
             text = {
                 if (!sumLockedIn) {
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(5.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        val focusRequester = remember { FocusRequester() }
-                        TextField(
-                            value = sum?.toString() ?: "",
-                            onValueChange = {
-                                sum = it.toIntOrNull().takeIf { it != null && it > 0 }
-                            },
-                            label = { Text("Summa") },
-                            keyboardOptions = KeyboardOptions(
-                                imeAction = ImeAction.Done, keyboardType = KeyboardType.Number
-                            ),
-                            singleLine = true,
-                            suffix = { Text(text = MONEY) },
-                            modifier = Modifier
-                                .weight(1f)
-                                .focusRequester(focusRequester)
-                        )
-                        LaunchedEffect(true) {
-                            focusRequester.requestFocus()
-                        }
-                        val dialogCalc = dialogCalculator(resultPaste = {
-                            if (it > 0) {
-                                sum = it
-                            }
-                        },
-                            initialExpr = { sum?.toString() ?: "" })
-                        IconButton(
-                            onClick = { dialogCalc() },
-                            modifier = Modifier.requiredHeight(IntrinsicSize.Max)
+                    Column(Modifier.fillMaxWidth()) {
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(5.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(painterResource(id = R.drawable.calculate), null)
+                            val focusRequester = remember { FocusRequester() }
+                            TextField(
+                                value = sum?.toString() ?: "",
+                                onValueChange = {
+                                    sum = it.toIntOrNull().takeIf { it != null && it > 0 }
+                                },
+                                label = { Text(if (realEstateTradeTax) "Īpašuma vērtība" else "Summa") },
+                                keyboardOptions = KeyboardOptions(
+                                    imeAction = ImeAction.Done, keyboardType = KeyboardType.Number
+                                ),
+                                singleLine = true,
+                                suffix = { Text(text = MONEY) },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .focusRequester(focusRequester)
+                            )
+                            LaunchedEffect(true) {
+                                focusRequester.requestFocus()
+                            }
+                            val dialogCalc = dialogCalculator(resultPaste = {
+                                if (it > 0) {
+                                    sum = it
+                                }
+                            },
+                                initialExpr = { sum?.toString() ?: "" })
+                            IconButton(
+                                onClick = { dialogCalc() },
+                                modifier = Modifier.requiredHeight(IntrinsicSize.Max)
+                            ) {
+                                Icon(painterResource(id = R.drawable.calculate), null)
+                            }
+                        }
+                        if (currentBankOperationDialog == BankOperation.REMOVE && currentGame?.optionalTradeTax == true) {
+                            Card(
+                                Modifier
+                                    .padding(top = 10.dp)
+                                    .fillMaxWidth()
+                            ) {
+                                Column(Modifier.fillMaxWidth()) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Checkbox(
+                                            checked = realEstateTradeTax,
+                                            onCheckedChange = {
+                                                realEstateTradeTax = it
+                                            })
+                                        Text(
+                                            text = "Īpašumu apmaiņas komisija",
+                                            color = colorScheme.secondary
+                                        )
+                                    }
+                                    AnimatedVisibility(sum != null && realEstateTradeTax) {
+                                        Row(
+                                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                            modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp).padding(bottom = 10.dp)
+                                        ) {
+                                            Text(
+                                                text = "Summa ar komisiju:",
+                                                style = Typography.bodyLarge
+                                            )
+                                            Text(
+                                                "${((sum ?: 0) * (globalSettings.optionalTradeMoneyTaxPercent.intValue / 100f + 1f)).roundToInt()}$MONEY",
+                                                color = colorScheme.tertiary,
+                                                style = Typography.bodyLarge
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        AnimatedVisibility(currentGame?.optionalTradeTax == true && sum != null && currentBankOperationDialog == BankOperation.TRANSFER) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                modifier = Modifier
+                                    .padding(top = 10.dp)
+                                    .fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = "Ar komisiju:",
+                                    style = Typography.bodyLarge
+                                )
+                                Text(
+                                    "${((sum ?: 0) * (globalSettings.optionalTradeMoneyTaxPercent.intValue / 100f + 1f)).roundToInt()}$MONEY",
+                                    color = colorScheme.tertiary,
+                                    style = Typography.bodyLarge
+                                )
+                            }
                         }
                     }
                 } else {
@@ -287,6 +352,13 @@ fun GameScreen(navController: NavHostController) {
                 TextButton(
                     onClick = {
                         sumLockedIn = true
+                        if (currentBankOperationDialog == BankOperation.TRANSFER) {
+                            sum = ((sum
+                                ?: 0) * (globalSettings.optionalTradeMoneyTaxPercent.intValue / 100f + 1f)).roundToInt()
+                        } else if (realEstateTradeTax) {
+                            sum = ((sum
+                                ?: 0) * (globalSettings.optionalTradeRealestateTaxPercent.intValue / 100f + 1f)).roundToInt()
+                        }
                     },
                     enabled = sum != null && !sumLockedIn
                 ) {

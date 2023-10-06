@@ -215,6 +215,7 @@ data class Log(
 
 data class Game(
     val cardsSupport: Boolean,
+    val optionalTradeTax: Boolean,
     val playerToMove: MutableState<Player?>,
     val lap: MutableIntState,
     val players: SnapshotStateList<Player>,
@@ -231,6 +232,7 @@ data class Game(
 @Serializable
 data class StaticGame(
     val cardsSupport: Boolean,
+    val optionalTradeTax: Boolean,
     val playerToMove: StaticPlayer?,
     val lap: Int,
     val players: List<StaticPlayer>,
@@ -241,6 +243,7 @@ data class StaticGame(
 ) {
     constructor(game: Game) : this(
         game.cardsSupport,
+        game.optionalTradeTax,
         if (game.playerToMove.value != null) StaticPlayer(game.playerToMove.value!!) else null,
         game.lap.intValue,
         game.players.map { StaticPlayer(it) },
@@ -320,7 +323,7 @@ var globalSettings by mutableStateOf(
         startingCash = 1500,
         darkmode = mutableIntStateOf(0),
         sortPlayersByMoney = mutableStateOf(true),
-        optionalTradeMoneyTaxPercent = mutableIntStateOf(10),
+        optionalTradeMoneyTaxPercent = mutableIntStateOf(15),
         optionalTradeRealestateTaxPercent = mutableIntStateOf(10),
         realestateTaxPercent = mutableIntStateOf(8)
     )
@@ -432,6 +435,75 @@ class MainActivity : ComponentActivity() {
                         title = { Text("Iestatījumi") },
                         text = {
                             Column(Modifier.fillMaxWidth()) {
+                                var otmpTempValue by remember { mutableStateOf(globalSettings.optionalTradeMoneyTaxPercent.intValue.toString()) }
+                                TextField(value = otmpTempValue,
+                                    onValueChange = {
+                                        if (it.toIntOrNull() != null && it.toInt() > -1) {
+                                            globalSettings.optionalTradeMoneyTaxPercent.intValue = it.toInt()
+                                            coroutineScope.launch {
+                                                settingsDataStore.edit { prefs ->
+                                                    prefs[intPreferencesKey("optionalTradeMoneyTaxPercent")] =
+                                                        it.toInt()
+                                                }
+                                            }
+                                        }
+                                        otmpTempValue = it
+                                    },
+                                    keyboardOptions = KeyboardOptions(
+                                        imeAction = ImeAction.Done,
+                                        keyboardType = KeyboardType.Number
+                                    ),
+                                    label = { Text(text = "Neobligātas naudas apmaiņas %") },
+                                    singleLine = true,
+                                    suffix = { Text(text = "%") },
+                                )
+                                var otrepTempValue by remember { mutableStateOf(globalSettings.optionalTradeRealestateTaxPercent.intValue.toString()) }
+                                TextField(value = otrepTempValue,
+                                    onValueChange = {
+                                        if (it.toIntOrNull() != null && it.toInt() > -1) {
+                                            globalSettings.optionalTradeRealestateTaxPercent.intValue = it.toInt()
+                                            coroutineScope.launch {
+                                                settingsDataStore.edit { prefs ->
+                                                    prefs[intPreferencesKey("optionalTradeRealestateTaxPercent")] =
+                                                        it.toInt()
+                                                }
+                                            }
+                                        }
+                                        otrepTempValue = it
+                                    },
+                                    keyboardOptions = KeyboardOptions(
+                                        imeAction = ImeAction.Done,
+                                        keyboardType = KeyboardType.Number
+                                    ),
+                                    label = { Text(text = "Neobligātas īpašumu apmaiņas %") },
+                                    singleLine = true,
+                                    suffix = { Text(text = "%") },
+                                    modifier = Modifier.padding(top = 5.dp)
+                                )
+                                var realestateTaxTempValue by remember { mutableStateOf(globalSettings.realestateTaxPercent.intValue.toString()) }
+                                TextField(value = realestateTaxTempValue,
+                                    onValueChange = {
+                                        if (it.toIntOrNull() != null && it.toInt() > -1) {
+                                            globalSettings.realestateTaxPercent.intValue = it.toInt()
+                                            coroutineScope.launch {
+                                                settingsDataStore.edit { prefs ->
+                                                    prefs[intPreferencesKey("realestateTaxPercent")] =
+                                                        it.toInt()
+                                                }
+                                            }
+                                        }
+                                        realestateTaxTempValue = it
+                                    },
+                                    keyboardOptions = KeyboardOptions(
+                                        imeAction = ImeAction.Done,
+                                        keyboardType = KeyboardType.Number
+                                    ),
+                                    label = { Text(text = "Nekustamo īpašumu nodoklis") },
+                                    singleLine = true,
+                                    suffix = { Text(text = "%") },
+                                    modifier = Modifier.padding(top = 5.dp)
+                                )
+                                Spacer(modifier = Modifier.height(20.dp))
                                 Row(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     modifier = Modifier.fillMaxWidth(),
@@ -478,7 +550,7 @@ class MainActivity : ComponentActivity() {
                                     suffix = { Text(text = MONEY) },
                                     modifier = Modifier.padding(top = 5.dp)
                                 )
-                                Spacer(modifier = Modifier.height(30.dp))
+                                Spacer(modifier = Modifier.height(20.dp))
                                 SegmentedButtons(
                                     itemsList = mutableListOf("Sistēma", "Tumšs", "Gaišs"),
                                     onSelectedItem = {
@@ -595,6 +667,7 @@ class MainActivity : ComponentActivity() {
                                         // Associate player objects with loan player objects so money is synced
                                         currentGame = Game(
                                             staticGame.cardsSupport,
+                                            staticGame.optionalTradeTax,
                                             mutableStateOf(if (staticGame.playerToMove != null) players.find { it1 -> it1.money.intValue == staticGame.playerToMove.money && it1.card == staticGame.playerToMove.card && it1.name == staticGame.playerToMove.name } else null),
                                             mutableIntStateOf(staticGame.lap),
                                             players.toMutableStateList(),
