@@ -301,7 +301,7 @@ fun GameScreen(navController: NavHostController) {
                                                 style = Typography.bodyLarge
                                             )
                                             Text(
-                                                "${((sum ?: 0) * (globalSettings.optionalTradeMoneyTaxPercent.intValue / 100f + 1f)).roundToInt()}$MONEY",
+                                                "${((sum ?: 0) * (globalSettings.optionalTradeRealestateTaxPercent.intValue / 100f + 1f)).roundToInt()}$MONEY",
                                                 color = colorScheme.tertiary,
                                                 style = Typography.bodyLarge
                                             )
