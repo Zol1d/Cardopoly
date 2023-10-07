@@ -25,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -36,11 +37,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalMinimumInteractiveComponentEnforcement
 import androidx.compose.material3.MaterialTheme.colorScheme
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
+import androidx.compose.material3.rememberBottomSheetScaffoldState
+import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -271,11 +274,20 @@ fun GameScreen(navController: NavHostController) {
                                 Icon(painterResource(id = R.drawable.calculate), null)
                             }
                         }
-                        if(globalSettings.realestateTaxPercent.intValue != 0 && currentBankOperationDialog == BankOperation.ADD) {
-                            val calculator = dialogRealEstateTaxCalculator(resultPaste = { sum = it })
-                            TextButton(onClick = { calculator() }, modifier = Modifier
-                                .padding(top = 10.dp)
-                                .fillMaxWidth(), colors = ButtonDefaults.textButtonColors(containerColor = colorScheme.secondary, contentColor = colorScheme.onSecondary), shape = Shapes.listItem) {
+                        if (globalSettings.realestateTaxPercent.intValue != 0 && currentBankOperationDialog == BankOperation.ADD) {
+                            val calculator =
+                                dialogRealEstateTaxCalculator(resultPaste = { sum = it })
+                            TextButton(
+                                onClick = { calculator() },
+                                modifier = Modifier
+                                    .padding(top = 10.dp)
+                                    .fillMaxWidth(),
+                                colors = ButtonDefaults.textButtonColors(
+                                    containerColor = colorScheme.secondary,
+                                    contentColor = colorScheme.onSecondary
+                                ),
+                                shape = Shapes.listItem
+                            ) {
                                 Text(text = "Nekustamo īpašumu nodokļi")
                             }
                         }
@@ -520,343 +532,342 @@ fun GameScreen(navController: NavHostController) {
             }
         )
     }
-    Scaffold(snackbarHost = { Snackbar.Host() }) { pv ->
-        Column(
+    val bsss = rememberBottomSheetScaffoldState(rememberStandardBottomSheetState(SheetValue.Expanded, skipHiddenState = true))
+    BottomSheetScaffold(scaffoldState = bsss, sheetContent = {
+        Column(Modifier.padding(horizontal = 10.dp)) {
+            if (currentGame?.playerToMove?.value != null) {
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    ElevatedCard(
+                        onClick = {
+                            val currIndex =
+                                currentGame!!.players.indexOf(currentGame!!.playerToMove.value)
+                            currentGame!!.playerToMove.value =
+                                currentGame!!.players[if (currIndex == 0) currentGame!!.players.size - 1 else currIndex - 1]
+                            if (currIndex == 0) {
+                                currentGame!!.lap.intValue -= 1
+                            }
+                        },
+                        modifier = Modifier.weight(0.48f),
+                        colors = CardDefaults.elevatedCardColors(
+                            containerColor = colorScheme.primary,
+                            contentColor = colorScheme.onPrimary,
+                            disabledContentColor = colorScheme.onSurface.copy(0.38f)
+                        ),
+                        enabled = !(currentGame!!.lap.intValue <= 1 && currentGame!!.players.indexOf(
+                            currentGame!!.playerToMove.value
+                        ) == 0),
+                    ) {
+                        Column(
+                            Modifier
+                                .padding(10.dp)
+                                .fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(
+                                Icons.Rounded.ArrowBack,
+                                contentDescription = null,
+                                modifier = Modifier.size(46.dp)
+                            )
+                        }
+                    }
+                    ElevatedCard(
+                        onClick = ::nextPlayerToMove,
+                        modifier = Modifier.weight(1f),
+                        colors = CardDefaults.elevatedCardColors(
+                            containerColor = colorScheme.primary,
+                            contentColor = colorScheme.onPrimary
+                        )
+                    ) {
+                        Column(
+                            Modifier
+                                .padding(10.dp)
+                                .fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(
+                                Icons.Rounded.ArrowForward,
+                                contentDescription = null,
+                                modifier = Modifier.size(46.dp)
+                            )
+                        }
+                    }
+                }
+            }
+            ScreenSelector(
+                rowList = listOf(
+                    if (currentGame?.cardsSupport == true) listOf(
+                        ScreenItem(
+                            null,
+                            null,
+                            R.drawable.add,
+                            onClick = { currentBankOperationDialog = BankOperation.ADD }),
+                        ScreenItem(
+                            null,
+                            null,
+                            R.drawable.remove,
+                            onClick = { currentBankOperationDialog = BankOperation.REMOVE }),
+                        ScreenItem(
+                            null,
+                            null,
+                            R.drawable.sync_alt,
+                            onClick = { currentBankOperationDialog = BankOperation.TRANSFER }),
+                    ) else listOf(),
+                ),
+                navController = navController,
+                modifier = Modifier
+                    .fillMaxWidth()
+            )
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                ElevatedCard(
+                    onClick = { navController.navigate("loans") },
+                    colors = CardDefaults.elevatedCardColors(contentColor = colorScheme.onTertiaryContainer),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .padding(10.dp)
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Icon(
+                            painterResource(R.drawable.request_quote),
+                            contentDescription = null,
+                            modifier = Modifier.size(40.dp)
+                        )
+                        Text(text = "Aizdevumi", style = Typography.bodyLarge)
+                    }
+                }
+                ElevatedCard(
+                    onClick = { navController.navigate(if (currentGame?.cardsSupport == true) "logs" else "bankingcalc") },
+                    colors = CardDefaults.elevatedCardColors(contentColor = colorScheme.onTertiaryContainer),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .padding(10.dp)
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Icon(
+                            painterResource(if (currentGame?.cardsSupport == true) R.drawable.history else R.drawable.calculate),
+                            contentDescription = null,
+                            modifier = Modifier.size(40.dp)
+                        )
+                        Text(
+                            text = if (currentGame?.cardsSupport == true) "Darījumi" else "Kalk.",
+                            style = Typography.bodyLarge
+                        )
+                    }
+                }
+            }
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                TextButton(
+                    onClick = { exitDialogOpen = true },
+                    colors = ButtonDefaults.textButtonColors(
+                        containerColor = colorScheme.surfaceVariant,
+                        contentColor = colorScheme.onSurfaceVariant
+                    ),
+                    modifier = Modifier.weight(1f),
+                    shape = Shapes.largeButton
+                ) {
+                    Text(
+                        text = "Beigt",
+                        modifier = Modifier.padding(horizontal = 10.dp),
+                        style = Typography.bodyLarge
+                    )
+                }
+                TextButton(
+                    onClick = { globalSettingsDialogOpen = true },
+                    colors = ButtonDefaults.textButtonColors(
+                        containerColor = colorScheme.surfaceVariant,
+                        contentColor = colorScheme.onSurfaceVariant
+                    ),
+                    modifier = Modifier.weight(1f),
+                    shape = Shapes.largeButton
+                ) {
+                    Text(
+                        text = "Iestatījumi",
+                        modifier = Modifier.padding(horizontal = 10.dp),
+                        style = Typography.bodyLarge
+                    )
+                }
+            }
+        }
+    }, snackbarHost = { Snackbar.Host() }) { pv ->
+        Box(
             Modifier
                 .fillMaxSize()
-                .padding(extraPadding(pv, top = 10.dp)),
-            verticalArrangement = Arrangement.SpaceBetween
+                .padding(extraPadding(pv, top = 10.dp))
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                CompositionLocalProvider(
-                    LocalMinimumInteractiveComponentEnforcement provides false
-                ) {
-                    LazyColumn(userScrollEnabled = true) {
-                        itemsIndexed(currentGame?.players?.run {
-                            if (globalSettings.sortPlayersByMoney.value) sortedByDescending { it.money.intValue } else this
-                        }
-                            ?: listOf()) { _, player ->
-                            ElevatedButton(
-                                onClick = {
-                                    if (currentGame!!.players.size > 2) {
-                                        removePlayerDialog = player
-                                    } else {
-                                        Snackbar.showSnackbarMsg(
-                                            "Nevar dzēst spēlētāju: Aktīvo spēlētāju skaits nedrīkst būt mazāks par 2",
-                                            true,
-                                            SnackbarDuration.Long
+            CompositionLocalProvider(
+                LocalMinimumInteractiveComponentEnforcement provides false
+            ) {
+                LazyColumn(userScrollEnabled = true) {
+                    itemsIndexed(currentGame?.players?.run {
+                        if (globalSettings.sortPlayersByMoney.value) sortedByDescending { it.money.intValue } else this
+                    }
+                        ?: listOf()) { _, player ->
+                        ElevatedButton(
+                            onClick = {
+                                if (currentGame!!.players.size > 2) {
+                                    removePlayerDialog = player
+                                } else {
+                                    Snackbar.showSnackbarMsg(
+                                        "Nevar dzēst spēlētāju: Aktīvo spēlētāju skaits nedrīkst būt mazāks par 2",
+                                        true,
+                                        SnackbarDuration.Long
+                                    )
+                                }
+                            },
+                            shape = Shapes.listItem,
+                            contentPadding = PaddingValues(
+                                horizontal = 13.dp,
+                                vertical = 7.dp
+                            ),
+                            colors = ButtonDefaults.elevatedButtonColors(
+                                containerColor = animateColorAsState(
+                                    if (currentGame?.playerToMove?.value == player) colorScheme.tertiaryContainer else colorScheme.surface,
+                                    label = ""
+                                ).value,
+                                contentColor = animateColorAsState(
+                                    if (currentGame?.playerToMove?.value == player) colorScheme.primary else colorScheme.primary,
+                                    label = ""
+                                ).value
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 3.dp)
+                                .animateItemPlacement()
+                        ) {
+                            Box(Modifier.fillMaxWidth()) {
+                                if (currentGame?.cardsSupport == true) {
+                                    val intvalue by animateIntAsState(
+                                        targetValue = player.money.intValue,
+                                        label = "",
+                                        animationSpec = spring(
+                                            visibilityThreshold = 1,
+                                            stiffness = Spring.StiffnessVeryLow
                                         )
-                                    }
-                                },
-                                shape = Shapes.listItem,
-                                contentPadding = PaddingValues(
-                                    horizontal = 13.dp,
-                                    vertical = 7.dp
-                                ),
-                                colors = ButtonDefaults.elevatedButtonColors(
-                                    containerColor = animateColorAsState(
-                                        if (currentGame?.playerToMove?.value == player) colorScheme.tertiaryContainer else colorScheme.surface,
-                                        label = ""
-                                    ).value,
-                                    contentColor = animateColorAsState(
-                                        if (currentGame?.playerToMove?.value == player) colorScheme.primary else colorScheme.primary,
-                                        label = ""
-                                    ).value
-                                ),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 3.dp)
-                                    .animateItemPlacement()
-                            ) {
-                                Box(Modifier.fillMaxWidth()) {
+                                    )
+                                    Text(
+                                        text = "$intvalue$MONEY",
+                                        color = colorScheme.tertiary,
+                                        style = Typography.bodyLarge,
+                                        modifier = Modifier.align(Alignment.TopEnd)
+                                    )
+                                } else {
+                                    Icon(
+                                        Icons.Rounded.Person,
+                                        contentDescription = null,
+                                        modifier = Modifier.align(Alignment.CenterStart)
+                                    )
+                                }
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                    modifier = Modifier.align(if (currentGame?.cardsSupport == true) Alignment.CenterStart else Alignment.Center)
+                                ) {
                                     if (currentGame?.cardsSupport == true) {
-                                        val intvalue by animateIntAsState(
-                                            targetValue = player.money.intValue,
-                                            label = "",
-                                            animationSpec = spring(
-                                                visibilityThreshold = 1,
-                                                stiffness = Spring.StiffnessVeryLow
-                                            )
-                                        )
-                                        Text(
-                                            text = "$intvalue$MONEY",
-                                            color = colorScheme.tertiary,
-                                            style = Typography.bodyLarge,
-                                            modifier = Modifier.align(Alignment.TopEnd)
-                                        )
-                                    } else {
                                         Icon(
-                                            Icons.Rounded.Person,
+                                            painterResource(id = R.drawable.credit_card),
                                             contentDescription = null,
-                                            modifier = Modifier.align(Alignment.CenterStart)
+                                            tint = NFCCardColorBindings[player.card]
+                                                ?: Color.Unspecified
                                         )
                                     }
-                                    Row(
-                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                        modifier = Modifier.align(if (currentGame?.cardsSupport == true) Alignment.CenterStart else Alignment.Center)
-                                    ) {
-                                        if (currentGame?.cardsSupport == true) {
-                                            Icon(
-                                                painterResource(id = R.drawable.credit_card),
-                                                contentDescription = null,
-                                                tint = NFCCardColorBindings[player.card]
-                                                    ?: Color.Unspecified
-                                            )
-                                        }
-                                        Column {
-                                            Text(
-                                                player.name,
-                                                style = Typography.bodyLarge,
-                                                textAlign = if (currentGame?.cardsSupport == true) TextAlign.Start else TextAlign.Center
-                                            )
-                                            if (currentGame?.loans?.any { it.to == player } == true) {
-                                                if (currentGame?.loans?.any { it.to == player && it.terms is LoanTerms.Laps && it.terms.paybackLap == currentGame!!.lap.intValue } == true) {
-                                                    Text(
-                                                        "Parāds jāatmaksā šajā aplī",
-                                                        style = Typography.bodyMedium,
-                                                        color = colorScheme.primary,
-                                                        textAlign = if (currentGame?.cardsSupport == true) TextAlign.Start else TextAlign.Center
-                                                    )
-                                                } else if (currentGame?.loans?.any { it.to == player && it.terms is LoanTerms.Laps && it.terms.paybackLap < currentGame!!.lap.intValue } == true) {
-                                                    Text(
-                                                        "Kavēts parāds",
-                                                        style = Typography.bodyMedium,
-                                                        color = colorScheme.error,
-                                                        textAlign = if (currentGame?.cardsSupport == true) TextAlign.Start else TextAlign.Center
-                                                    )
-                                                } else {
-                                                    Text(
-                                                        "${currentGame?.loans?.count { it.to == player }} ${if (currentGame?.loans?.count { it.to == player } == 1) "aktīvs parāds" else "aktīvi parādi"}",
-                                                        style = Typography.bodyMedium,
-                                                        color = colorScheme.secondary,
-                                                        textAlign = if (currentGame?.cardsSupport == true) TextAlign.Start else TextAlign.Center
-                                                    )
-                                                }
+                                    Column {
+                                        Text(
+                                            player.name,
+                                            style = Typography.bodyLarge,
+                                            textAlign = if (currentGame?.cardsSupport == true) TextAlign.Start else TextAlign.Center
+                                        )
+                                        if (currentGame?.loans?.any { it.to == player } == true) {
+                                            if (currentGame?.loans?.any { it.to == player && it.terms is LoanTerms.Laps && it.terms.paybackLap == currentGame!!.lap.intValue } == true) {
+                                                Text(
+                                                    "Parāds jāatmaksā šajā aplī",
+                                                    style = Typography.bodyMedium,
+                                                    color = colorScheme.primary,
+                                                    textAlign = if (currentGame?.cardsSupport == true) TextAlign.Start else TextAlign.Center
+                                                )
+                                            } else if (currentGame?.loans?.any { it.to == player && it.terms is LoanTerms.Laps && it.terms.paybackLap < currentGame!!.lap.intValue } == true) {
+                                                Text(
+                                                    "Kavēts parāds",
+                                                    style = Typography.bodyMedium,
+                                                    color = colorScheme.error,
+                                                    textAlign = if (currentGame?.cardsSupport == true) TextAlign.Start else TextAlign.Center
+                                                )
+                                            } else {
+                                                Text(
+                                                    "${currentGame?.loans?.count { it.to == player }} ${if (currentGame?.loans?.count { it.to == player } == 1) "aktīvs parāds" else "aktīvi parādi"}",
+                                                    style = Typography.bodyMedium,
+                                                    color = colorScheme.secondary,
+                                                    textAlign = if (currentGame?.cardsSupport == true) TextAlign.Start else TextAlign.Center
+                                                )
                                             }
                                         }
                                     }
                                 }
                             }
                         }
-                        itemsIndexed(currentGame?.historicPlayers ?: listOf()) { _, player ->
-                            ElevatedButton(
-                                onClick = {},
-                                enabled = false,
-                                shape = Shapes.listItem,
-                                contentPadding = PaddingValues(
-                                    horizontal = 13.dp,
-                                    vertical = 7.dp
-                                ),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 3.dp),
-                            ) {
-                                Box(Modifier.fillMaxWidth()) {
-                                    if (currentGame?.cardsSupport == false) {
-                                        Icon(
-                                            Icons.Rounded.Person,
-                                            contentDescription = null,
-                                            modifier = Modifier.align(Alignment.CenterStart)
-                                        )
-                                    }
-                                    Row(
-                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                        modifier = Modifier.align(if (currentGame?.cardsSupport == true) Alignment.CenterStart else Alignment.Center)
-                                    ) {
-                                        if (currentGame?.cardsSupport == true) {
-                                            Icon(
-                                                painterResource(id = R.drawable.credit_card),
-                                                contentDescription = null,
-                                                tint = NFCCardColorBindings[player.card]
-                                                    ?: Color.Unspecified
-                                            )
-                                        }
-                                        Text(
-                                            player.name,
-                                            style = Typography.bodyLarge,
-                                            textDecoration = TextDecoration.LineThrough,
-                                            fontStyle = FontStyle.Italic
-                                        )
-                                    }
-                                }
-                            }
-                        }
                     }
-                }
-            }
-            Column {
-                if (currentGame?.playerToMove?.value != null) {
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 10.dp),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        ElevatedCard(
-                            onClick = {
-                                val currIndex =
-                                    currentGame!!.players.indexOf(currentGame!!.playerToMove.value)
-                                currentGame!!.playerToMove.value =
-                                    currentGame!!.players[if (currIndex == 0) currentGame!!.players.size - 1 else currIndex - 1]
-                                if (currIndex == 0) {
-                                    currentGame!!.lap.intValue -= 1
-                                }
-                            },
-                            modifier = Modifier.weight(0.48f),
-                            colors = CardDefaults.elevatedCardColors(
-                                containerColor = colorScheme.primary,
-                                contentColor = colorScheme.onPrimary,
-                                disabledContentColor = colorScheme.onSurface.copy(0.38f)
+                    itemsIndexed(currentGame?.historicPlayers ?: listOf()) { _, player ->
+                        ElevatedButton(
+                            onClick = {},
+                            enabled = false,
+                            shape = Shapes.listItem,
+                            contentPadding = PaddingValues(
+                                horizontal = 13.dp,
+                                vertical = 7.dp
                             ),
-                            enabled = !(currentGame!!.lap.intValue <= 1 && currentGame!!.players.indexOf(
-                                currentGame!!.playerToMove.value
-                            ) == 0),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 3.dp),
                         ) {
-                            Column(
-                                Modifier
-                                    .padding(10.dp)
-                                    .fillMaxWidth(),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Icon(
-                                    Icons.Rounded.ArrowBack,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(46.dp)
-                                )
+                            Box(Modifier.fillMaxWidth()) {
+                                if (currentGame?.cardsSupport == false) {
+                                    Icon(
+                                        Icons.Rounded.Person,
+                                        contentDescription = null,
+                                        modifier = Modifier.align(Alignment.CenterStart)
+                                    )
+                                }
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                    modifier = Modifier.align(if (currentGame?.cardsSupport == true) Alignment.CenterStart else Alignment.Center)
+                                ) {
+                                    if (currentGame?.cardsSupport == true) {
+                                        Icon(
+                                            painterResource(id = R.drawable.credit_card),
+                                            contentDescription = null,
+                                            tint = NFCCardColorBindings[player.card]
+                                                ?: Color.Unspecified
+                                        )
+                                    }
+                                    Text(
+                                        player.name,
+                                        style = Typography.bodyLarge,
+                                        textDecoration = TextDecoration.LineThrough,
+                                        fontStyle = FontStyle.Italic
+                                    )
+                                }
                             }
                         }
-                        ElevatedCard(
-                            onClick = ::nextPlayerToMove,
-                            modifier = Modifier.weight(1f),
-                            colors = CardDefaults.elevatedCardColors(
-                                containerColor = colorScheme.primary,
-                                contentColor = colorScheme.onPrimary
-                            )
-                        ) {
-                            Column(
-                                Modifier
-                                    .padding(10.dp)
-                                    .fillMaxWidth(),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Icon(
-                                    Icons.Rounded.ArrowForward,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(46.dp)
-                                )
-                            }
-                        }
-                    }
-                }
-                ScreenSelector(
-                    rowList = listOf(
-                        if (currentGame?.cardsSupport == true) listOf(
-                            ScreenItem(
-                                null,
-                                null,
-                                R.drawable.add,
-                                onClick = { currentBankOperationDialog = BankOperation.ADD }),
-                            ScreenItem(
-                                null,
-                                null,
-                                R.drawable.remove,
-                                onClick = { currentBankOperationDialog = BankOperation.REMOVE }),
-                            ScreenItem(
-                                null,
-                                null,
-                                R.drawable.sync_alt,
-                                onClick = { currentBankOperationDialog = BankOperation.TRANSFER }),
-                        ) else listOf(),
-                    ),
-                    navController = navController,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                )
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 10.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    ElevatedCard(
-                        onClick = { navController.navigate("loans") },
-                        colors = CardDefaults.elevatedCardColors(contentColor = colorScheme.onTertiaryContainer),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .padding(10.dp)
-                                .fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            Icon(
-                                painterResource(R.drawable.request_quote),
-                                contentDescription = null,
-                                modifier = Modifier.size(40.dp)
-                            )
-                            Text(text = "Aizdevumi", style = Typography.bodyLarge)
-                        }
-                    }
-                    ElevatedCard(
-                        onClick = { navController.navigate(if (currentGame?.cardsSupport == true) "logs" else "bankingcalc") },
-                        colors = CardDefaults.elevatedCardColors(contentColor = colorScheme.onTertiaryContainer),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .padding(10.dp)
-                                .fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            Icon(
-                                painterResource(if (currentGame?.cardsSupport == true) R.drawable.history else R.drawable.calculate),
-                                contentDescription = null,
-                                modifier = Modifier.size(40.dp)
-                            )
-                            Text(
-                                text = if (currentGame?.cardsSupport == true) "Darījumi" else "Kalk.",
-                                style = Typography.bodyLarge
-                            )
-                        }
-                    }
-                }
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 10.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    TextButton(
-                        onClick = { exitDialogOpen = true },
-                        colors = ButtonDefaults.textButtonColors(
-                            containerColor = colorScheme.surfaceVariant,
-                            contentColor = colorScheme.onSurfaceVariant
-                        ),
-                        modifier = Modifier.weight(1f),
-                        shape = Shapes.largeButton
-                    ) {
-                        Text(
-                            text = "Beigt",
-                            modifier = Modifier.padding(horizontal = 10.dp),
-                            style = Typography.bodyLarge
-                        )
-                    }
-                    TextButton(
-                        onClick = { globalSettingsDialogOpen = true },
-                        colors = ButtonDefaults.textButtonColors(
-                            containerColor = colorScheme.surfaceVariant,
-                            contentColor = colorScheme.onSurfaceVariant
-                        ),
-                        modifier = Modifier.weight(1f),
-                        shape = Shapes.largeButton
-                    ) {
-                        Text(
-                            text = "Iestatījumi",
-                            modifier = Modifier.padding(horizontal = 10.dp),
-                            style = Typography.bodyLarge
-                        )
                     }
                 }
             }
