@@ -276,7 +276,7 @@ fun GameScreen(navController: NavHostController) {
                             TextButton(onClick = { calculator() }, modifier = Modifier
                                 .padding(top = 10.dp)
                                 .fillMaxWidth(), colors = ButtonDefaults.textButtonColors(containerColor = colorScheme.secondary, contentColor = colorScheme.onSecondary), shape = Shapes.listItem) {
-                                Text(text = "Nekustamo īpašumu % kalkulators")
+                                Text(text = "Nekustamo īpašumu nodokļi")
                             }
                         }
                         if (currentBankOperationDialog == BankOperation.REMOVE && currentGame?.optionalTradeTax == true) {

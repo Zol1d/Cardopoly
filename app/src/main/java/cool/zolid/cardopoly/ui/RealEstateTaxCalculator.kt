@@ -57,14 +57,14 @@ fun dialogRealEstateTaxCalculator(
     if (dialogOpen) {
         AlertDialog(
             onDismissRequest = { dialogOpen = false },
-            title = { Text("Nek. īpašumu kalk.") },
+            title = { Text("Nek. īp. nodokļu kalk.") },
             text = {
                 Column(
                     Modifier.fillMaxWidth(),
                 ) {
                     Text(
                         text = "${
-                            if (realEstateList.isNotEmpty()) realEstateList.sumOf { (it * (globalSettings.realestateTaxPercent.intValue / 100f + 1f)).roundToInt() } else "--"
+                            if (realEstateList.isNotEmpty()) realEstateList.sumOf { (it * (globalSettings.realestateTaxPercent.intValue / 100f)).roundToInt() } else "--"
                         }$MONEY",
                         style = Typography.headlineMedium,
                         color = MaterialTheme.colorScheme.tertiary,
@@ -145,7 +145,7 @@ fun dialogRealEstateTaxCalculator(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        resultPaste(realEstateList.sumOf { (it * (globalSettings.realestateTaxPercent.intValue / 100f + 1f)).roundToInt() })
+                        resultPaste(realEstateList.sumOf { (it * (globalSettings.realestateTaxPercent.intValue / 100f)).roundToInt() })
                         dialogOpen = false
                     },
                     enabled = realEstateList.isNotEmpty()
