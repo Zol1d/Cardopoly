@@ -89,6 +89,7 @@ import cool.zolid.cardopoly.ui.ScreenSelector
 import cool.zolid.cardopoly.ui.Shapes
 import cool.zolid.cardopoly.ui.Snackbar
 import cool.zolid.cardopoly.ui.dialogCalculator
+import cool.zolid.cardopoly.ui.dialogRealEstateTaxCalculator
 import cool.zolid.cardopoly.ui.extraPadding
 import cool.zolid.cardopoly.ui.theme.Typography
 import kotlinx.coroutines.CoroutineScope
@@ -270,6 +271,14 @@ fun GameScreen(navController: NavHostController) {
                                 Icon(painterResource(id = R.drawable.calculate), null)
                             }
                         }
+                        if(globalSettings.realestateTaxPercent.intValue != 0 && currentBankOperationDialog == BankOperation.ADD) {
+                            val calculator = dialogRealEstateTaxCalculator(resultPaste = { sum = it })
+                            TextButton(onClick = { calculator() }, modifier = Modifier
+                                .padding(top = 10.dp)
+                                .fillMaxWidth(), colors = ButtonDefaults.textButtonColors(containerColor = colorScheme.secondary, contentColor = colorScheme.onSecondary), shape = Shapes.listItem) {
+                                Text(text = "Nekustamo īpašumu % kalkulators")
+                            }
+                        }
                         if (currentBankOperationDialog == BankOperation.REMOVE && currentGame?.optionalTradeTax == true) {
                             Card(
                                 Modifier
@@ -294,7 +303,10 @@ fun GameScreen(navController: NavHostController) {
                                     AnimatedVisibility(sum != null && realEstateTradeTax) {
                                         Row(
                                             horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                            modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp).padding(bottom = 10.dp)
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(horizontal = 10.dp)
+                                                .padding(bottom = 10.dp)
                                         ) {
                                             Text(
                                                 text = "Summa ar komisiju:",

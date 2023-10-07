@@ -503,28 +503,6 @@ class MainActivity : ComponentActivity() {
                                     suffix = { Text(text = "%") },
                                     modifier = Modifier.padding(top = 5.dp)
                                 )
-                                Spacer(modifier = Modifier.height(20.dp))
-                                Row(
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = "Kārtot spēlētājus pēc naudas",
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    Switch(
-                                        checked = globalSettings.sortPlayersByMoney.value,
-                                        onCheckedChange = { switchState ->
-                                            globalSettings.sortPlayersByMoney.value = switchState
-                                            coroutineScope.launch {
-                                                settingsDataStore.edit { prefs ->
-                                                    prefs[booleanPreferencesKey("sortPlayersByMoney")] =
-                                                        switchState
-                                                }
-                                            }
-                                        })
-                                }
                                 var sCashTempValue by remember { mutableStateOf(globalSettings.startingCash.toString()) }
                                 TextField(
                                     value = sCashTempValue,
@@ -551,21 +529,27 @@ class MainActivity : ComponentActivity() {
                                     modifier = Modifier.padding(top = 5.dp)
                                 )
                                 Spacer(modifier = Modifier.height(20.dp))
-                                SegmentedButtons(
-                                    itemsList = mutableListOf("Sistēma", "Tumšs", "Gaišs"),
-                                    onSelectedItem = {
-                                        globalSettings.darkmode.intValue = it
-                                        coroutineScope.launch {
-                                            settingsDataStore.edit { prefs ->
-                                                prefs[intPreferencesKey("darkmode")] = it
+                                Row(
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "Kārtot spēlētājus pēc naudas",
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    Switch(
+                                        checked = globalSettings.sortPlayersByMoney.value,
+                                        onCheckedChange = { switchState ->
+                                            globalSettings.sortPlayersByMoney.value = switchState
+                                            coroutineScope.launch {
+                                                settingsDataStore.edit { prefs ->
+                                                    prefs[booleanPreferencesKey("sortPlayersByMoney")] =
+                                                        switchState
+                                                }
                                             }
-                                        }
-                                    },
-                                    initialSelectionIndex = globalSettings.darkmode.intValue,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(top = 5.dp)
-                                )
+                                        })
+                                }
                                 Row(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     modifier = Modifier.fillMaxWidth(),
@@ -593,6 +577,22 @@ class MainActivity : ComponentActivity() {
                                             }
                                         })
                                 }
+                                Spacer(modifier = Modifier.height(20.dp))
+                                SegmentedButtons(
+                                    itemsList = mutableListOf("Sistēma", "Tumšs", "Gaišs"),
+                                    onSelectedItem = {
+                                        globalSettings.darkmode.intValue = it
+                                        coroutineScope.launch {
+                                            settingsDataStore.edit { prefs ->
+                                                prefs[intPreferencesKey("darkmode")] = it
+                                            }
+                                        }
+                                    },
+                                    initialSelectionIndex = globalSettings.darkmode.intValue,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 5.dp)
+                                )
                             }
                         },
                         confirmButton = {
