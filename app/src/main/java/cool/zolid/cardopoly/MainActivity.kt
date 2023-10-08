@@ -375,7 +375,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onPause() {
         super.onPause()
-        NfcAdapter.getDefaultAdapter(this).disableReaderMode(this)
+        NfcAdapter.getDefaultAdapter(this)?.disableReaderMode(this)
     }
 
     @OptIn(ExperimentalMaterial3Api::class)
