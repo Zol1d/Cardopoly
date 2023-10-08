@@ -82,6 +82,12 @@ fun HomeScreen(navController: NavHostController) {
                 verticalArrangement = Arrangement.spacedBy(5.dp)
             ) {
                 Text(
+                    "Izstrādāja Zolids īstiem Monopoly faniem",
+                    fontSize = 14.sp,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                )
+                Text(
                     "Cardopoly versija ${BuildConfig.VERSION_NAME}, būvējums #${BuildConfig.VERSION_CODE}",
                     fontSize = 11.sp,
                     textAlign = TextAlign.Center,
