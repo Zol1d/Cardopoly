@@ -7,6 +7,7 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -56,6 +57,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -534,7 +536,7 @@ fun GameScreen(navController: NavHostController) {
     }
     val bsss = rememberBottomSheetScaffoldState(rememberStandardBottomSheetState(SheetValue.Expanded, skipHiddenState = true))
     BottomSheetScaffold(scaffoldState = bsss, sheetContent = {
-        Column(Modifier.padding(horizontal = 10.dp)) {
+        Column(Modifier.padding(horizontal = 10.dp).background(Brush.verticalGradient(0f to colorScheme.surface, 0.2f to colorScheme.background))) {
             if (currentGame?.playerToMove?.value != null) {
                 Row(
                     Modifier
