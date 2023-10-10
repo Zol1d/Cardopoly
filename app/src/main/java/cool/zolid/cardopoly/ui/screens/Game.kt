@@ -808,7 +808,7 @@ fun GameScreen(navController: NavHostController) {
                                                 ?: Color.Unspecified
                                         )
                                     }
-                                    Column {
+                                    Column(horizontalAlignment = if (currentGame?.cardsSupport == true) Alignment.Start else Alignment.CenterHorizontally) {
                                         Text(
                                             player.name,
                                             style = Typography.bodyLarge,
