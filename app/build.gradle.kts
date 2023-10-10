@@ -27,7 +27,7 @@ android {
         //noinspection OldTargetApi
         targetSdk = 33
         versionCode = code
-        versionName = "1.0.1"
+        versionName = "1.0.3"
 
         vectorDrawables {
             useSupportLibrary = true
