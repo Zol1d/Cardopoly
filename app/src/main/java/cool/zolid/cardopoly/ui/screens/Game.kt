@@ -135,6 +135,7 @@ fun GameScreen(navController: NavHostController) {
         var sum by remember { mutableStateOf<Int?>(null) }
         var sumLockedIn by remember { mutableStateOf(false) }
         var realEstateTradeTax by remember { mutableStateOf(false) }
+        var moneyTradeTax by remember { mutableStateOf(false) }
         var cardTrasferFromUid by remember { mutableStateOf<String?>(null) }
         DisposableEffect(true) {
             fun processNFC(b64id: String) {
@@ -189,14 +190,17 @@ fun GameScreen(navController: NavHostController) {
                             } else if (cardTrasferFromUid != b64id) {
                                 val fromPlayer =
                                     currentGame!!.players.find { it.card == cardTrasferFromUid }!!
-                                if (fromPlayer.money.intValue < sum!!) {
+                                val sumToRemove = if (moneyTradeTax)
+                                    ((sum
+                                        ?: 0) * (globalSettings.optionalTradeMoneyTaxPercent.intValue / 100f + 1f)).roundToInt() else sum!!
+                                if (fromPlayer.money.intValue < sumToRemove) {
                                     Snackbar.showSnackbarMsg(
                                         "Darījums neveiksmīgs - nav pietiekamu līdzekļu",
                                         true
                                     )
                                     Beep.error()
                                 } else {
-                                    fromPlayer.money.intValue -= sum!!
+                                    fromPlayer.money.intValue -= sumToRemove
                                     currentGame!!.players.find { it.card == b64id }!!.money.intValue += sum!!
                                     Snackbar.showSnackbarMsg("Darījums veiksmīgs")
                                     Beep.moneyAdd()
@@ -234,7 +238,8 @@ fun GameScreen(navController: NavHostController) {
                             BankOperation.TRANSFER -> "Apmaiņa"
                             null -> ""
                         }
-                    }${if (sumLockedIn) " - $sum$MONEY" else ""}"
+                    }${if (sumLockedIn) if (moneyTradeTax) " - $sum (${((sum
+                        ?: 0) * (globalSettings.optionalTradeMoneyTaxPercent.intValue / 100f + 1f)).roundToInt()})$MONEY" else " - $sum$MONEY" else ""}"
                 )
             },
             text = {
@@ -324,8 +329,9 @@ fun GameScreen(navController: NavHostController) {
                                                 .padding(bottom = 10.dp)
                                         ) {
                                             Text(
-                                                text = "Summa ar komisiju:",
-                                                style = Typography.bodyLarge
+                                                text = "Ar komisiju:",
+                                                style = Typography.bodyLarge,
+                                                modifier = Modifier.weight(1f)
                                             )
                                             Text(
                                                 "${((sum ?: 0) * (globalSettings.optionalTradeRealestateTaxPercent.intValue / 100f + 1f)).roundToInt()}$MONEY",
@@ -337,22 +343,48 @@ fun GameScreen(navController: NavHostController) {
                                 }
                             }
                         }
-                        AnimatedVisibility(currentGame?.optionalTradeTax == true && sum != null && currentBankOperationDialog == BankOperation.TRANSFER) {
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                modifier = Modifier
+                        if (currentBankOperationDialog == BankOperation.TRANSFER && currentGame?.optionalTradeTax == true) {
+                            Card(
+                                Modifier
                                     .padding(top = 10.dp)
                                     .fillMaxWidth()
                             ) {
-                                Text(
-                                    text = "Ar komisiju:",
-                                    style = Typography.bodyLarge
-                                )
-                                Text(
-                                    "${((sum ?: 0) * (globalSettings.optionalTradeMoneyTaxPercent.intValue / 100f + 1f)).roundToInt()}$MONEY",
-                                    color = colorScheme.tertiary,
-                                    style = Typography.bodyLarge
-                                )
+                                Column(Modifier.fillMaxWidth()) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Checkbox(
+                                            checked = moneyTradeTax,
+                                            onCheckedChange = {
+                                                moneyTradeTax = it
+                                            })
+                                        Text(
+                                            text = "Neobligātās apmaiņas komisija",
+                                            color = colorScheme.secondary
+                                        )
+                                    }
+                                    AnimatedVisibility(sum != null && moneyTradeTax) {
+                                        Row(
+                                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(horizontal = 10.dp)
+                                                .padding(bottom = 10.dp)
+                                        ) {
+                                            Text(
+                                                text = "Ar komisiju:",
+                                                style = Typography.bodyLarge,
+                                                modifier = Modifier.weight(1f)
+                                            )
+                                            Text(
+                                                "${((sum ?: 0) * (globalSettings.optionalTradeMoneyTaxPercent.intValue / 100f + 1f)).roundToInt()}$MONEY",
+                                                color = colorScheme.tertiary,
+                                                style = Typography.bodyLarge
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -379,10 +411,7 @@ fun GameScreen(navController: NavHostController) {
                 TextButton(
                     onClick = {
                         sumLockedIn = true
-                        if (currentBankOperationDialog == BankOperation.TRANSFER) {
-                            sum = ((sum
-                                ?: 0) * (globalSettings.optionalTradeMoneyTaxPercent.intValue / 100f + 1f)).roundToInt()
-                        } else if (realEstateTradeTax) {
+                        if (realEstateTradeTax) {
                             sum = ((sum
                                 ?: 0) * (globalSettings.optionalTradeRealestateTaxPercent.intValue / 100f + 1f)).roundToInt()
                         }

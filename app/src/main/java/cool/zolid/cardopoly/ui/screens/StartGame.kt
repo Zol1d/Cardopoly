@@ -261,10 +261,15 @@ fun StartGameScreen(navController: NavHostController, cards_enabled: Boolean) {
                             )
                             Switch(
                                 checked = optionalTradeTax,
-                                enabled = globalSettings.optionalTradeMoneyTaxPercent.intValue != 0 && globalSettings.optionalTradeRealestateTaxPercent.intValue != 0,
                                 onCheckedChange = {
                                     optionalTradeTax = it
                                 })
+                        }
+                        AnimatedVisibility(optionalTradeTax && (globalSettings.optionalTradeMoneyTaxPercent.intValue == 0 || globalSettings.optionalTradeRealestateTaxPercent.intValue == 0)) {
+                            Text(
+                                text = "Pārliecinieties, ka iestatījumos esat iestatījis atbilstošas komisijas",
+                                color = colorScheme.tertiary
+                            )
                         }
                     }
                 }

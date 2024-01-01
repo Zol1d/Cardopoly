@@ -57,6 +57,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
@@ -453,7 +454,7 @@ class MainActivity : ComponentActivity() {
                                         imeAction = ImeAction.Done,
                                         keyboardType = KeyboardType.Number
                                     ),
-                                    label = { Text(text = "Neobligātas naudas apmaiņas %") },
+                                    label = { Text(text = "Neobligātas naudas apmaiņas komisija", maxLines = 1, overflow = TextOverflow.Ellipsis) },
                                     singleLine = true,
                                     suffix = { Text(text = "%") },
                                 )
@@ -475,7 +476,7 @@ class MainActivity : ComponentActivity() {
                                         imeAction = ImeAction.Done,
                                         keyboardType = KeyboardType.Number
                                     ),
-                                    label = { Text(text = "Neobligātas īpašumu apmaiņas %") },
+                                    label = { Text(text = "Neobligātas īpašumu apmaiņas komisija", maxLines = 1, overflow = TextOverflow.Ellipsis) },
                                     singleLine = true,
                                     suffix = { Text(text = "%") },
                                     modifier = Modifier.padding(top = 5.dp)
@@ -498,7 +499,7 @@ class MainActivity : ComponentActivity() {
                                         imeAction = ImeAction.Done,
                                         keyboardType = KeyboardType.Number
                                     ),
-                                    label = { Text(text = "Nekustamo īpašumu nodoklis") },
+                                    label = { Text(text = "Nekustamo īpašumu nodoklis", maxLines = 1, overflow = TextOverflow.Ellipsis) },
                                     singleLine = true,
                                     suffix = { Text(text = "%") },
                                     modifier = Modifier.padding(top = 5.dp)
@@ -523,7 +524,7 @@ class MainActivity : ComponentActivity() {
                                         imeAction = ImeAction.Done,
                                         keyboardType = KeyboardType.Number
                                     ),
-                                    label = { Text(text = "Sākotnejā naudas summa") },
+                                    label = { Text(text = "Sākotnejā naudas summa", maxLines = 1, overflow = TextOverflow.Ellipsis) },
                                     singleLine = true,
                                     suffix = { Text(text = MONEY) },
                                     modifier = Modifier.padding(top = 5.dp)
