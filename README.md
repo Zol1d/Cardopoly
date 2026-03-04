@@ -15,6 +15,13 @@ Cardopoly ir Android aplikācija galda spēlei **Monopoly**, kur naudas aprite n
 
 Aplikācijā tika integrēti arī dažādi pašizdomāti spēles noteikumi, piemēram aizņemšanās un dažādu veido nodokļi, no tiem var pilnībā atteikties.
 
+### Ekrānšāviņi
+|               Sākums               |               Spēles iestatīšana               |
+|:----------------------------------:|:----------------------------------------------:|
+| ![Sākums](imgs/start.jpg?raw=true) | ![Spēles iestatīšana](imgs/setup.jpg?raw=true) |
+|               Spēle                |                 Pieskaitīšana                  |
+|  ![Spēle](imgs/game.jpg?raw=true)  |    ![Pieskaitīšana](imgs/add.jpg?raw=true)     |
+
 ### Izmantotās tehnoloģijas
 
 - Kotlin + Jetpack Compose
